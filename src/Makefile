@@ -21,7 +21,7 @@ libopenssl_LIB := openssl/$(HOSTARCH)/lib
 libusb_INC := libusb-1.0/$(HOSTARCH)
 libusb_LIB := libusb-1.0/$(HOSTARCH)/libusb-1.0
 
-DEPENDS_INC := -Idepends -Idepends/libbase/include -Idepends/libcutils/include -Idepends/libbuildversion/include 
+DEPENDS_INC := -Iincludes -Idepends/libbase/include -Idepends/libcutils/include -Idepends/libbuildversion/include 
 
 all: $(libdepends_a_TARGET) $(libmdnssd_a_TARGET) $(libadb_a_TARGET) $(adb_TARGET)
 adb: $(libadb_a_TARGET) $(adb_TARGET)
@@ -30,8 +30,8 @@ adb: $(libadb_a_TARGET) $(adb_TARGET)
 
 $(OUT_DIR):
 ifneq ($(OUT_DIR), $(wildcard $(OUT_DIR)))
-	$(shell mkdir -p $(OUT_DIR))
-endif	
+  $(shell mkdir -p $(OUT_DIR))
+endif
 
 
 # libdepends.a
