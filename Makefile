@@ -35,7 +35,7 @@ $(SOURCE_DIR)/adb:
 download_libbase: $(DEPENDS_DIR)/libbase
 $(DEPENDS_DIR)/libbase:
 	$(info Downloading libbase source code ...)
-	@git clone https://android.googlesource.com/platform/system/libbase --single-branch --branch platform-tools-34.0.0 $(DEPENDS_DIR)/libbase $(SUPPRESS_OUTPUT)
+	@git clone https://android.googlesource.com/platform/system/libbase --single-branch --branch $(PLATFORM_TOOLS_REF) $(DEPENDS_DIR)/libbase $(SUPPRESS_OUTPUT)
 	@rm -rf $(DEPENDS_DIR)/libbase/.git
 
 download_libcutils: $(DEPENDS_DIR)/libcutils
@@ -43,12 +43,11 @@ $(DEPENDS_DIR)/libcutils:
 	$(info Downloading libcutils source code ...)
 	@bash utils/git_sparse.sh https://android.googlesource.com/platform/system/core $(PLATFORM_TOOLS_REF) libcutils $(DEPENDS_DIR) $(SUPPRESS_OUTPUT)
 
-# required headers to compile libbase
 download_build_headers: $(INCLUDES_DIR)/android
 $(INCLUDES_DIR)/android:
 	$(info Downloading build headers ...)
 	@mkdir -p $(INCLUDES_DIR)/android/
-	@curl https://android.googlesource.com/platform/system/logging/+/refs/tags/platform-tools-34.0.0/liblog/include/android/log.h?format=text $(SUPPRESS_OUTPUT) | base64 -d > $(INCLUDES_DIR)/android/log.h
+	@curl https://android.googlesource.com/platform/system/logging/+/refs/tags/$(PLATFORM_TOOLS_REF)/liblog/include/android/log.h?format=text $(SUPPRESS_OUTPUT) | base64 -d > $(INCLUDES_DIR)/android/log.h
 
 generate_platform_tools_version_header: $(INCLUDES_DIR)/platform_tools_version.h
 $(INCLUDES_DIR)/platform_tools_version.h:
