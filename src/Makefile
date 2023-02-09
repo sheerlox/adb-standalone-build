@@ -21,7 +21,7 @@ libopenssl_LIB := openssl/$(HOSTARCH)/lib
 libusb_INC := libusb-1.0/$(HOSTARCH)
 libusb_LIB := libusb-1.0/$(HOSTARCH)/libusb-1.0
 
-DEPENDS_INC := -Iincludes -Idepends/libbase/include -Idepends/libcutils/include -Idepends/boringssl/include
+DEPENDS_INC := -Iincludes -Idepends/base/include -Idepends/cutils/include -Idepends/boringssl/include
 
 all: $(libdepends_a_TARGET) $(libmdnssd_a_TARGET) $(libadb_a_TARGET) $(adb_TARGET)
 adb: $(libadb_a_TARGET) $(adb_TARGET)
@@ -38,18 +38,18 @@ endif
 libdepends_a_INC := -I$(libopenssl_INC) $(DEPENDS_INC)
 
 libdepends_a_SOURCES_CXX := \
-	depends/libbase/chrono_utils.cpp \
-	depends/libbase/cmsg.cpp \
-	depends/libbase/file.cpp \
-	depends/libbase/logging.cpp \
-	depends/libbase/mapped_file.cpp \
-	depends/libbase/parsenetaddress.cpp \
-	depends/libbase/properties.cpp \
-	depends/libbase/stringprintf.cpp \
-	depends/libbase/strings.cpp \
-	depends/libbase/threads.cpp \
-	depends/libbase/test_utils.cpp \
-	depends/libbase/errors_unix.cpp \
+	depends/base/chrono_utils.cpp \
+	depends/base/cmsg.cpp \
+	depends/base/file.cpp \
+	depends/base/logging.cpp \
+	depends/base/mapped_file.cpp \
+	depends/base/parsenetaddress.cpp \
+	depends/base/properties.cpp \
+	depends/base/stringprintf.cpp \
+	depends/base/strings.cpp \
+	depends/base/threads.cpp \
+	depends/base/test_utils.cpp \
+	depends/base/errors_unix.cpp \
 	depends/log/config_read.cpp \
 	depends/log/config_write.cpp \
 	depends/log/log_event_list.cpp \

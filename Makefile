@@ -33,16 +33,16 @@ $(SOURCE_DIR)/adb:
 	$(info Downloading adb source code ...)
 	@git clone https://android.googlesource.com/platform/packages/modules/adb --branch $(PLATFORM_TOOLS_REF) $(SOURCE_DIR)/adb $(SUPPRESS_OUTPUT)
 
-download_libbase: $(DEPENDS_DIR)/libbase
-$(DEPENDS_DIR)/libbase:
+download_libbase: $(DEPENDS_DIR)/base
+$(DEPENDS_DIR)/base:
 	$(info Downloading libbase source code ...)
-	@git clone https://android.googlesource.com/platform/system/libbase --single-branch --branch $(PLATFORM_TOOLS_REF) $(DEPENDS_DIR)/libbase $(SUPPRESS_OUTPUT)
-	@rm -rf $(DEPENDS_DIR)/libbase/.git
+	@git clone https://android.googlesource.com/platform/system/libbase --single-branch --branch $(PLATFORM_TOOLS_REF) $(DEPENDS_DIR)/base $(SUPPRESS_OUTPUT)
+	@rm -rf $(DEPENDS_DIR)/base/.git
 
-download_libcutils: $(DEPENDS_DIR)/libcutils
-$(DEPENDS_DIR)/libcutils:
+download_libcutils: $(DEPENDS_DIR)/cutils
+$(DEPENDS_DIR)/cutils:
 	$(info Downloading libcutils source code ...)
-	@bash utils/git_sparse.sh https://android.googlesource.com/platform/system/core $(PLATFORM_TOOLS_REF) libcutils $(DEPENDS_DIR) $(SUPPRESS_OUTPUT)
+	@bash utils/git_sparse.sh https://android.googlesource.com/platform/system/core $(PLATFORM_TOOLS_REF) libcutils $(DEPENDS_DIR)/cutils $(SUPPRESS_OUTPUT)
 
 download_android_headers: $(INCLUDES_DIR)/android
 $(INCLUDES_DIR)/android:
