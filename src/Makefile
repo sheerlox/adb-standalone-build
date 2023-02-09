@@ -6,116 +6,115 @@ HOSTARCH := $(shell uname -m | \
 	-e s/ppc64/powerpc/ \
 	-e s/ppc/powerpc/ \
 	-e s/macppc/powerpc/)
+OUT_DIR := ../out/$(HOSTARCH)
 
 CXX = clang++ -std=c++20
 CC  = clang
 
-shell:
-ifneq (openssl, $(wildcard openssl))
-	$(shell ln -s /work/openssl openssl)
-endif
-ifneq (out/$(HOSTARCH), $(wildcard out/$(HOSTARCH)))
-	$(shell mkdir -p out/$(HOSTARCH))
-endif	
-
-
-libdepend_a_TARGET := out/$(HOSTARCH)/libdepend.a
-libadb_a_TARGET := out/$(HOSTARCH)/libadb.a
-libmdnssd_a_TARGET := out/$(HOSTARCH)/libmsdbssd.a
-adb_TARGET := out/$(HOSTARCH)/adb
-
-.PHONY: all
-
-all:$(libdepend_a_TARGET) $(libmdnssd_a_TARGET) $(libadb_a_TARGET) $(adb_TARGET)
+libdepends_a_TARGET := $(OUT_DIR)/libdepends.a
+libadb_a_TARGET := $(OUT_DIR)/libadb.a
+libmdnssd_a_TARGET := $(OUT_DIR)/libmsdbssd.a
+adb_TARGET := $(OUT_DIR)/adb
 
 libopenssl_INC := openssl/$(HOSTARCH)/include
 libopenssl_LIB := openssl/$(HOSTARCH)/lib
 libusb_INC := libusb-1.0/$(HOSTARCH)
 libusb_LIB := libusb-1.0/$(HOSTARCH)/libusb-1.0
 
-#编译lia
-libdepend_a_INC := -I$(libopenssl_INC) -Idepend -Idepend/diagnose_usb
+DEPENDS_INC := -Idepends -Idepends/libbase/include
 
-libdepend_a_SOURCES_CXX := \
-        depend/android-base/chrono_utils.cpp \
-        depend/android-base/cmsg.cpp \
-        depend/android-base/file.cpp \
-        depend/android-base/logging.cpp \
-        depend/android-base/mapped_file.cpp \
-        depend/android-base/parsenetaddress.cpp \
-        depend/android-base/properties.cpp \
-        depend/android-base/quick_exit.cpp \
-        depend/android-base/stringprintf.cpp \
-        depend/android-base/strings.cpp \
-        depend/android-base/threads.cpp \
-        depend/android-base/test_utils.cpp \
-        depend/android-base/errors_unix.cpp \
-	depend/log/config_read.cpp \
-	depend/log/config_write.cpp \
-	depend/log/log_event_list.cpp \
-	depend/log/log_event_write.cpp \
-	depend/log/logger_lock.cpp \
-	depend/log/logger_name.cpp \
-	depend/log/logger_read.cpp \
-	depend/log/logger_write.cpp \
-	depend/log/logprint.cpp \
-	depend/log/stderr_write.cpp \
-        depend/log/fake_log_device.cpp \
-        depend/log/fake_writer.cpp \
-	depend/cutils/config_utils.cpp \
-	depend/cutils/canned_fs_config.cpp \
-	depend/cutils/iosched_policy.cpp \
-	depend/cutils/load_file.cpp \
-	depend/cutils/native_handle.cpp \
-	depend/cutils/record_stream.cpp \
-	depend/cutils/sockets.cpp \
-	depend/cutils/strdup16to8.cpp \
-	depend/cutils/strdup8to16.cpp \
-	depend/cutils/threads.cpp \
-	depend/cutils/fs.cpp \
-	depend/cutils/hashmap.cpp \
-	depend/cutils/multiuser.cpp \
-	depend/cutils/socket_inaddr_any_server_unix.cpp \
-	depend/cutils/socket_local_client_unix.cpp \
-	depend/cutils/socket_local_server_unix.cpp \
-	depend/cutils/socket_network_client_unix.cpp \
-	depend/cutils/sockets_unix.cpp \
-	depend/cutils/str_parms.cpp \
-	depend/cutils/ashmem-host.cpp \
-	depend/cutils/fs_config.cpp \
-	depend/cutils/trace-host.cpp \
-	depend/diagnose_usb/diagnose_usb.cpp
+all: $(libdepends_a_TARGET) $(libmdnssd_a_TARGET) $(libadb_a_TARGET) $(adb_TARGET)
+adb: $(libadb_a_TARGET) $(adb_TARGET)
+
+.PHONY: all
+
+$(OUT_DIR):
+ifneq ($(OUT_DIR), $(wildcard $(OUT_DIR)))
+	$(shell mkdir -p $(OUT_DIR))
+endif	
 
 
-libdepend_a_SOURCES_C := \
-	depend/cutils/strlcpy.c \
-	depend/android-base/android_pubkey.c
+# libdepends.a
+libdepends_a_INC := -I$(libopenssl_INC) $(DEPENDS_INC)
 
-libdepend_a_CXXFLAGS := -DFAKE_LOG_DEVICE=1  -DADB_HOST=1
+libdepends_a_SOURCES_CXX := \
+	depends/libbase/chrono_utils.cpp \
+	depends/libbase/cmsg.cpp \
+	depends/libbase/file.cpp \
+	depends/libbase/logging.cpp \
+	depends/libbase/mapped_file.cpp \
+	depends/libbase/parsenetaddress.cpp \
+	depends/libbase/properties.cpp \
+	depends/libbase/quick_exit.cpp \
+	depends/libbase/stringprintf.cpp \
+	depends/libbase/strings.cpp \
+	depends/libbase/threads.cpp \
+	depends/libbase/test_utils.cpp \
+	depends/libbase/errors_unix.cpp \
+	depends/log/config_read.cpp \
+	depends/log/config_write.cpp \
+	depends/log/log_event_list.cpp \
+	depends/log/log_event_write.cpp \
+	depends/log/logger_lock.cpp \
+	depends/log/logger_name.cpp \
+	depends/log/logger_read.cpp \
+	depends/log/logger_write.cpp \
+	depends/log/logprint.cpp \
+	depends/log/stderr_write.cpp \
+	depends/log/fake_log_device.cpp \
+	depends/log/fake_writer.cpp \
+	depends/cutils/config_utils.cpp \
+	depends/cutils/canned_fs_config.cpp \
+	depends/cutils/iosched_policy.cpp \
+	depends/cutils/load_file.cpp \
+	depends/cutils/native_handle.cpp \
+	depends/cutils/record_stream.cpp \
+	depends/cutils/sockets.cpp \
+	depends/cutils/strdup16to8.cpp \
+	depends/cutils/strdup8to16.cpp \
+	depends/cutils/threads.cpp \
+	depends/cutils/fs.cpp \
+	depends/cutils/hashmap.cpp \
+	depends/cutils/multiuser.cpp \
+	depends/cutils/socket_inaddr_any_server_unix.cpp \
+	depends/cutils/socket_local_client_unix.cpp \
+	depends/cutils/socket_local_server_unix.cpp \
+	depends/cutils/socket_network_client_unix.cpp \
+	depends/cutils/sockets_unix.cpp \
+	depends/cutils/str_parms.cpp \
+	depends/cutils/ashmem-host.cpp \
+	depends/cutils/fs_config.cpp \
+	depends/cutils/trace-host.cpp \
+	depends/diagnose_usb/diagnose_usb.cpp
+
+libdepends_a_SOURCES_C := \
+	depend/cutils/strlcpy.c
+
+libdepends_a_CXXFLAGS := -DFAKE_LOG_DEVICE=1  -DADB_HOST=1
 
 
-libdepend_a_OBJ_CXX := $(patsubst %.cpp,%.o, $(libdepend_a_SOURCES_CXX))
-libdepend_a_OBJ_C := $(patsubst %.c,%.o, $(libdepend_a_SOURCES_C))
+libdepends_a_OBJ_CXX := $(patsubst %.cpp,%.o, $(libdepends_a_SOURCES_CXX))
+libdepends_a_OBJ_C := $(patsubst %.c,%.o, $(libdepends_a_SOURCES_C))
 
 
-$(libdepend_a_OBJ_CXX):%.o:%.cpp
-	$(CXX) -c  $(libdepend_a_INC) $(libdepend_a_CXXFLAGS) $< -o $@
-$(libdepend_a_OBJ_C):%.o:%.c
-	$(CC) -c  $(libdepend_a_INC) $(libdepend_a_CXXFLAGS) $< -o $@
+$(libdepends_a_OBJ_CXX): %.o:%.cpp
+	$(CXX) -c $(libdepends_a_INC) $(libdepends_a_CXXFLAGS) $< -o $@
+$(libdepends_a_OBJ_C):%.o:%.c
+	$(CC) -c  $(libdepends_a_INC) $(libdepends_a_CXXFLAGS) $< -o $@
 
 
-$(libdepend_a_TARGET):$(libdepend_a_OBJ_CXX) $(libdepend_a_OBJ_C)
-	ar rc $(libdepend_a_TARGET) $(libdepend_a_OBJ_CXX) $(libdepend_a_OBJ_C)
+$(libdepends_a_TARGET): $(OUT_DIR) $(libdepends_a_OBJ_CXX) $(libdepends_a_OBJ_C)
+	ar rc $(libdepends_a_TARGET) $(libdepends_a_OBJ_CXX) $(libdepends_a_OBJ_C)
 
 
-#编译libmdnssd.a
-libmdnssd_a_INC := -Idepend/mdnssd
+# libmdnssd.a
+libmdnssd_a_INC := -Idepends/mdnssd
 
 
 libmdnssd_a_SOURCES_C := \
-	depend/mdnssd/dnssd_clientlib.c \
-	depend/mdnssd/dnssd_clientstub.c \
-	depend/mdnssd/dnssd_ipc.c
+	depends/mdnssd/dnssd_clientlib.c \
+	depends/mdnssd/dnssd_clientstub.c \
+	depends/mdnssd/dnssd_ipc.c
 
 libmdnssd_a_CFLAGS := \
 	-O2 \
@@ -145,14 +144,14 @@ libmdnssd_a_CFLAGS := \
 	-DADB_HOST=1
 
 libmdnssd_a_OBJ_C := $(patsubst %.c,%.o, $(libmdnssd_a_SOURCES_C))
-$(libmdnssd_a_OBJ_C):%.o:%.c
+$(libmdnssd_a_OBJ_C): %.o:%.c
 	$(CC) -c  $(libmdnssd_a_INC) $(libmdnssd_a_CFLAGS) $< -o $@
 
-$(libmdnssd_a_TARGET):$(libmdnssd_a_OBJ_C)
+$(libmdnssd_a_TARGET): $(OUT_DIR) $(libmdnssd_a_OBJ_C)
 	ar rc $(libmdnssd_a_TARGET) $(libmdnssd_a_OBJ_C)
 
-#编译libadb.a
-libadb_a_INC :=  -I$(libusb_INC) -I$(libopenssl_INC) -Idepend -Iadb
+# libadb.a
+libadb_a_INC := -I$(libusb_INC) -I$(libopenssl_INC) $(DEPENDS_INC) -Iadb
 
 libadb_a_SOURCES := \
 	adb/adb.cpp \
@@ -182,14 +181,14 @@ libadb_a_CXXFLAGS := -DADB_HOST=1 $(ADB_COMMON_CFLAGS) \
 
 libadb_a_OBJ_CXX := $(patsubst %.cpp,%.o, $(libadb_a_SOURCES))
 
-$(libadb_a_OBJ_CXX):%.o:%.cpp
+$(libadb_a_OBJ_CXX): %.o:%.cpp
 	$(CXX) -c  $(libadb_a_INC) $(libadb_a_CXXFLAGS) $< -o $@
 
-$(libadb_a_TARGET):$(libadb_a_OBJ_CXX)
+$(libadb_a_TARGET): $(OUT_DIR) $(libadb_a_OBJ_CXX)
 	ar rc $(libadb_a_TARGET) $(libadb_a_OBJ_CXX)
 
-#编译adb
-adb_INC := -I$(libopenssl_INC) -I$(libusb_INC) -Idepend -Iadb
+# adb
+adb_INC := -I$(libopenssl_INC) -I$(libusb_INC) -Idepends -Iadb
 
 adb_SOURCES := \
 	adb/client/adb_client.cpp \
@@ -204,15 +203,15 @@ adb_SOURCES := \
 
 adb_CXXFLAGS :=	-std=gnu++2a -D_GNU_SOURCE -DADB_HOST=1 $(ADB_COMMON_CFLAGS) -D_Nonnull= -D_Nullable= -fpermissive
 
-adb_LDFLAG :=  $(libadb_a_TARGET) $(libmdnssd_a_TARGET) $(libdepend_a_TARGET) -L$(libusb_LIB) -l:libusb-1.0.a -ludev -L$(libopenssl_LIB) -l:libcrypto.a  -ludev -lpthread -static-libgcc -static-libstdc++
+adb_LDFLAG := $(libadb_a_TARGET) $(libmdnssd_a_TARGET) $(libdepends_a_TARGET) -L$(libusb_LIB) -l:libusb-1.0.a -ludev -L$(libopenssl_LIB) -l:libcrypto.a  -ludev -lpthread -static-libgcc -static-libstdc++
 
 adb_OBJ_CXX := $(patsubst %.cpp,%.o, $(adb_SOURCES))
 
-$(adb_OBJ_CXX):%.o:%.cpp
+$(adb_OBJ_CXX): %.o:%.cpp
 	$(CXX) -c  $(adb_INC) $(adb_CXXFLAGS) $< -o $@
 
-$(adb_TARGET):$(adb_OBJ_CXX)
-	$(CXX) -o  $@ $^ $(adb_CXXFLAGS) $(libadb_a_TARGET) $(libmdnssd_a_TARGET) $(libdepend_a_TARGET) $(adb_LDFLAG)
+$(adb_TARGET): $(OUT_DIR) $(adb_OBJ_CXX)
+	$(CXX) -o  $@ $^ $(adb_CXXFLAGS) $(libadb_a_TARGET) $(libmdnssd_a_TARGET) $(libdepends_a_TARGET) $(adb_LDFLAG)
 
 clean:
-	rm -rf $(libdepend_a_OBJ_CXX) $(libdepend_a_OBJ_C) $(libadb_a_OBJ_CXX) $(libadb_a_OBJ_CXX) $(adb_OBJ_CXX)  $(libmdnssd_a_OBJ_C) out/$(HOSTARCH)
+	rm -rf $(libdepends_a_OBJ_CXX) $(libdepends_a_OBJ_C) $(libadb_a_OBJ_CXX) $(libadb_a_OBJ_CXX) $(adb_OBJ_CXX)  $(libmdnssd_a_OBJ_C) $(OUT_DIR)
