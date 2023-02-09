@@ -25,7 +25,7 @@ else
   $(info Platform Tools version $(PLATFORM_TOOLS_VERSION) found!)
 endif
 
-all: download_adb download_libbase download_libcutils download_build_headers generate_platform_tools_version_header
+all: download_adb download_libbase download_libcutils download_android_headers download_build_headers generate_platform_tools_version_header
 
 download_adb: $(SOURCE_DIR)/adb
 $(SOURCE_DIR)/adb:
@@ -43,11 +43,17 @@ $(DEPENDS_DIR)/libcutils:
 	$(info Downloading libcutils source code ...)
 	@bash utils/git_sparse.sh https://android.googlesource.com/platform/system/core $(PLATFORM_TOOLS_REF) libcutils $(DEPENDS_DIR) $(SUPPRESS_OUTPUT)
 
-download_build_headers: $(INCLUDES_DIR)/android
+download_android_headers: $(INCLUDES_DIR)/android
 $(INCLUDES_DIR)/android:
-	$(info Downloading build headers ...)
+	$(info Downloading android headers ...)
 	@mkdir -p $(INCLUDES_DIR)/android/
-	@curl https://android.googlesource.com/platform/system/logging/+/refs/tags/$(PLATFORM_TOOLS_REF)/liblog/include/android/log.h?format=text $(SUPPRESS_OUTPUT) | base64 -d > $(INCLUDES_DIR)/android/log.h
+	@curl https://android.googlesource.com/platform/system/logging/+/refs/tags/$(PLATFORM_TOOLS_REF)/liblog/include/android/log.h?format=text -s | base64 -d > $(INCLUDES_DIR)/android/log.h
+
+download_build_headers: $(INCLUDES_DIR)/build
+$(INCLUDES_DIR)/build:
+	$(info Downloading build headers ...)
+	@mkdir -p $(INCLUDES_DIR)/build/
+	@curl https://android.googlesource.com/platform/build/soong/+/refs/tags/$(PLATFORM_TOOLS_REF)/cc/libbuildversion/include/build/version.h?format=text -s | base64 -d > $(INCLUDES_DIR)/build/version.h
 
 generate_platform_tools_version_header: $(INCLUDES_DIR)/platform_tools_version.h
 $(INCLUDES_DIR)/platform_tools_version.h:
