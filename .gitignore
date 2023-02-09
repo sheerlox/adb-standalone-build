@@ -1,6 +1,9 @@
 # Downloaded source files
 /src/*
 !/src/Makefile
+!/src/depends/
+/src/depends/*
+!/src/depends/.gitkeep
 
 # Output directory
 /out/
