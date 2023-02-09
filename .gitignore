@@ -1,6 +1,9 @@
 # Downloaded source files
 /src/*
-!/src/.gitkeep
+!/src/Makefile
+
+# Output directory
+/out/
 
 # Prerequisites
 *.d
