@@ -25,44 +25,52 @@ else
   $(info Platform Tools version $(PLATFORM_TOOLS_VERSION) found!)
 endif
 
-all: download_adb download_libbase download_libcutils download_android_headers download_build_headers download_boringssl \
-	generate_pt_version_header
+all: all_download_source all_download_headers generate_pt_version_header
 
-download_adb: $(SOURCE_DIR)/adb
+########################
+# DOWNLOAD SOURCE CODE #
+########################
+all_download_source: download_adb_source download_libbase_source download_libcutils_source download_boringssl_source
+
+download_adb_source: $(SOURCE_DIR)/adb
 $(SOURCE_DIR)/adb:
 	$(info Downloading adb source code ...)
 	@git clone https://android.googlesource.com/platform/packages/modules/adb --branch $(PLATFORM_TOOLS_REF) $(SOURCE_DIR)/adb $(SUPPRESS_OUTPUT)
 
-download_libbase: $(DEPENDS_DIR)/base
+download_libbase_source: $(DEPENDS_DIR)/base
 $(DEPENDS_DIR)/base:
 	$(info Downloading libbase source code ...)
 	@git clone https://android.googlesource.com/platform/system/libbase --single-branch --branch $(PLATFORM_TOOLS_REF) $(DEPENDS_DIR)/base $(SUPPRESS_OUTPUT)
 	@rm -rf $(DEPENDS_DIR)/base/.git
 
-download_libcutils: $(DEPENDS_DIR)/cutils
+download_libcutils_source: $(DEPENDS_DIR)/cutils
 $(DEPENDS_DIR)/cutils:
 	$(info Downloading libcutils source code ...)
 	@bash utils/git_sparse.sh https://android.googlesource.com/platform/system/core $(PLATFORM_TOOLS_REF) libcutils $(DEPENDS_DIR)/cutils $(SUPPRESS_OUTPUT)
 
-download_android_headers: $(INCLUDES_DIR)/android
-$(INCLUDES_DIR)/android:
-	$(info Downloading android headers ...)
-	@mkdir -p $(INCLUDES_DIR)/android/
-	@curl https://android.googlesource.com/platform/system/logging/+/refs/tags/$(PLATFORM_TOOLS_REF)/liblog/include/android/log.h?format=text -s | base64 -d > $(INCLUDES_DIR)/android/log.h
-
-download_build_headers: $(INCLUDES_DIR)/build
-$(INCLUDES_DIR)/build:
-	$(info Downloading build headers ...)
-	@mkdir -p $(INCLUDES_DIR)/build/
-	@curl https://android.googlesource.com/platform/build/soong/+/refs/tags/$(PLATFORM_TOOLS_REF)/cc/libbuildversion/include/build/version.h?format=text -s | base64 -d > $(INCLUDES_DIR)/build/version.h
-
-download_boringssl: $(DEPENDS_DIR)/boringssl
+download_boringssl_source: $(DEPENDS_DIR)/boringssl
 $(DEPENDS_DIR)/boringssl:
 	$(info Downloading boringssl source code ...)
 	@bash utils/git_sparse.sh https://android.googlesource.com/platform/external/boringssl $(PLATFORM_TOOLS_REF) src $(DEPENDS_DIR)/boringssl $(SUPPRESS_OUTPUT)
 
+########################
+#   DOWNLOAD HEADERS   #
+########################
+all_download_headers: download_android_headers download_build_headers
+
+download_android_headers: $(INCLUDES_DIR)/android
+$(INCLUDES_DIR)/android:
+	$(info Downloading android headers ...)
+	@bash utils/git_sparse.sh https://android.googlesource.com/platform/system/logging $(PLATFORM_TOOLS_REF) liblog/include/android/ $(INCLUDES_DIR)/android/ $(SUPPRESS_OUTPUT)
+
+download_build_headers: $(INCLUDES_DIR)/build
+$(INCLUDES_DIR)/build:
+	$(info Downloading build headers ...)
+	@bash utils/git_sparse.sh https://android.googlesource.com/platform/build/soong $(PLATFORM_TOOLS_REF) cc/libbuildversion/include/build/ $(INCLUDES_DIR)/build/ $(SUPPRESS_OUTPUT)
+
 generate_pt_version_header: $(INCLUDES_DIR)/platform_tools_version.h
 $(INCLUDES_DIR)/platform_tools_version.h:
+	$(info Generating platform tools version header ...)
 	@echo '#define PLATFORM_TOOLS_VERSION "$(PLATFORM_TOOLS_VERSION)"' > $(INCLUDES_DIR)/platform_tools_version.h
 
 
