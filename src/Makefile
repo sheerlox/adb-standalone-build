@@ -21,7 +21,7 @@ libopenssl_LIB := openssl/$(HOSTARCH)/lib
 libusb_INC := libusb-1.0/$(HOSTARCH)
 libusb_LIB := libusb-1.0/$(HOSTARCH)/libusb-1.0
 
-DEPENDS_INC := -Idepends -Idepends/libbase/include
+DEPENDS_INC := -Idepends -Idepends/libbase/include -Idepends/libcutils/include
 
 all: $(libdepends_a_TARGET) $(libmdnssd_a_TARGET) $(libadb_a_TARGET) $(adb_TARGET)
 adb: $(libadb_a_TARGET) $(adb_TARGET)
