@@ -21,7 +21,7 @@ libopenssl_LIB := openssl/$(HOSTARCH)/lib
 libusb_INC := libusb-1.0/$(HOSTARCH)
 libusb_LIB := libusb-1.0/$(HOSTARCH)/libusb-1.0
 
-DEPENDS_INC := -Iincludes -Idepends/libbase/include -Idepends/libcutils/include -Idepends/libbuildversion/include 
+DEPENDS_INC := -Iincludes -Idepends/libbase/include -Idepends/libcutils/include -Idepends/boringssl/include
 
 all: $(libdepends_a_TARGET) $(libmdnssd_a_TARGET) $(libadb_a_TARGET) $(adb_TARGET)
 adb: $(libadb_a_TARGET) $(adb_TARGET)
@@ -45,7 +45,6 @@ libdepends_a_SOURCES_CXX := \
 	depends/libbase/mapped_file.cpp \
 	depends/libbase/parsenetaddress.cpp \
 	depends/libbase/properties.cpp \
-	depends/libbase/quick_exit.cpp \
 	depends/libbase/stringprintf.cpp \
 	depends/libbase/strings.cpp \
 	depends/libbase/threads.cpp \
