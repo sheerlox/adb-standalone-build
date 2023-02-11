@@ -175,7 +175,7 @@ bp_libadb_SOURCES := \
   adb/transport_fd.cpp \
   adb/types.cpp
 
-bp_libadb_linux_SOURCES := fdevent/fdevent_epoll.cpp
+bp_libadb_linux_SOURCES := adb/fdevent/fdevent_epoll.cpp
 
 bp_libadb_posix_SOURCES := \
   adb/sysdeps_unix.cpp \
