@@ -21,7 +21,9 @@ libopenssl_LIB := openssl/$(HOSTARCH)/lib
 libusb_INC := libusb-1.0/$(HOSTARCH)
 libusb_LIB := libusb-1.0/$(HOSTARCH)/libusb-1.0
 
-DEPENDS_INC := -Iincludes -Idepends/base/include -Idepends/cutils/include -Idepends/boringssl/include
+DEPENDS_INC := $(addprefix -I,$(wildcard depends/*/include))
+ADB_INC := -Iadb -Iadb/proto $(addprefix -I,$(wildcard adb/*/include))
+EXTERNAL_INC := -Iexternal/protobuf/src
 
 ADB_COMMON_FLAGS := \
 	-DADB_HOST=1 \
@@ -40,7 +42,7 @@ endif
 ########################
 #     libdepends       #
 ########################
-libdepends_a_INC := -I$(libopenssl_INC) $(DEPENDS_INC)
+libdepends_a_INC := $(DEPENDS_INC)
 
 libdepends_a_SOURCES_CXX := \
 	depends/base/chrono_utils.cpp \
@@ -154,7 +156,7 @@ $(libmdnssd_a_TARGET): $(OUT_DIR) $(libmdnssd_a_OBJ_C)
 ########################
 #       libadb         #
 ########################
-libadb_a_INC := -I$(libusb_INC) -I$(libopenssl_INC) $(DEPENDS_INC) -Iadb -Iadb/crypto/include -Iadb/tls/include -Iexternal/protobuf/src -Iadb/proto
+libadb_a_INC := -Iincludes $(DEPENDS_INC) $(ADB_INC) $(EXTERNAL_INC)
 
 bp_libadb_SOURCES := \
 	adb/adb.cpp \
@@ -201,7 +203,7 @@ $(libadb_a_TARGET): $(OUT_DIR) $(libadb_a_OBJ_CXX)
 ########################
 #         adb          #
 ########################
-adb_INC := -I$(libopenssl_INC) -I$(libusb_INC) -Idepends -Iadb
+adb_INC := -Iincludes $(DEPENDS_INC) $(ADB_INC) $(EXTERNAL_INC)
 
 adb_SOURCES := \
 	adb/client/adb_client.cpp \
