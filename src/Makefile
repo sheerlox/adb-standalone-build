@@ -150,7 +150,7 @@ $(libmdnssd_a_TARGET): $(OUT_DIR) $(libmdnssd_a_OBJ_C)
 	ar rc $(libmdnssd_a_TARGET) $(libmdnssd_a_OBJ_C)
 
 # libadb.a
-libadb_a_INC := -I$(libusb_INC) -I$(libopenssl_INC) $(DEPENDS_INC) -Iadb
+libadb_a_INC := -I$(libusb_INC) -I$(libopenssl_INC) $(DEPENDS_INC) -Iadb -Iadb/crypto/include -Iexternal/protobuf/src -Iadb/proto
 
 libadb_a_SOURCES := \
 	adb/adb.cpp \
