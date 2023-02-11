@@ -150,31 +150,39 @@ $(libmdnssd_a_TARGET): $(OUT_DIR) $(libmdnssd_a_OBJ_C)
 	ar rc $(libmdnssd_a_TARGET) $(libmdnssd_a_OBJ_C)
 
 # libadb.a
-libadb_a_INC := -I$(libusb_INC) -I$(libopenssl_INC) $(DEPENDS_INC) -Iadb -Iadb/crypto/include -Iexternal/protobuf/src -Iadb/proto
+libadb_a_INC := -I$(libusb_INC) -I$(libopenssl_INC) $(DEPENDS_INC) -Iadb -Iadb/crypto/include -Iadb/tls/include -Iexternal/protobuf/src -Iadb/proto
 
-libadb_a_SOURCES := \
+bp_libadb_SOURCES := \
 	adb/adb.cpp \
-	adb/adb_io.cpp \
-	adb/adb_listeners.cpp \
-	adb/adb_trace.cpp \
-	adb/adb_unique_fd.cpp \
-	adb/adb_utils.cpp \
-	adb/fdevent.cpp \
-	adb/services.cpp \
-	adb/sockets.cpp \
-	adb/socket_spec.cpp \
-	adb/sysdeps/errno.cpp \
-	adb/transport.cpp \
-	adb/transport_fd.cpp \
-	adb/transport_local.cpp \
-	adb/transport_usb.cpp \
-	adb/sysdeps_unix.cpp \
-	adb/sysdeps/posix/network.cpp \
-	adb/client/auth.cpp \
-	adb/client/usb_libusb.cpp \
-	adb/client/usb_dispatch.cpp \
-	adb/client/transport_mdns.cpp \
-	adb/client/usb_linux.cpp
+  adb/adb_io.cpp \
+  adb/adb_listeners.cpp \
+  adb/adb_trace.cpp \
+  adb/adb_unique_fd.cpp \
+  adb/adb_utils.cpp \
+  adb/fdevent/fdevent.cpp \
+  adb/services.cpp \
+  adb/sockets.cpp \
+  adb/socket_spec.cpp \
+  adb/sysdeps/env.cpp \
+  adb/sysdeps/errno.cpp \
+  adb/transport.cpp \
+  adb/transport_fd.cpp \
+  adb/types.cpp
+
+bp_libadb_linux_SOURCES := fdevent/fdevent_epoll.cpp
+
+bp_libadb_posix_SOURCES := \
+  adb/sysdeps_unix.cpp \
+  adb/sysdeps/posix/network.cpp
+
+bp_libadbd_core_SOURCES := \
+  adb/daemon/adb_wifi.cpp \
+	adb/daemon/auth.cpp \
+	adb/daemon/jdwp_service.cpp \
+	adb/daemon/logging.cpp \
+	adb/daemon/transport_local.cpp
+
+libadb_a_SOURCES := $(bp_libadb_SOURCES) $(bp_libadb_linux_SOURCES) $(bp_libadb_posix_SOURCES) $(bp_libadbd_core_SOURCES)
 
 libadb_a_CXXFLAGS := -DADB_HOST=1 $(ADB_COMMON_CFLAGS) \
 
@@ -198,6 +206,11 @@ adb_SOURCES := \
 	adb/client/console.cpp \
 	adb/client/adb_install.cpp \
 	adb/client/line_printer.cpp \
+	adb/client/fastdeploy.cpp \
+	adb/client/fastdeploycallbacks.cpp \
+	adb/client/incremental.cpp \
+	adb/client/incremental_server.cpp \
+	adb/client/incremental_utils.cpp \
 	adb/shell_service_protocol.cpp
 
 adb_CXXFLAGS :=	-std=gnu++2a -D_GNU_SOURCE -DADB_HOST=1 $(ADB_COMMON_CFLAGS) -D_Nonnull= -D_Nullable= -fpermissive
