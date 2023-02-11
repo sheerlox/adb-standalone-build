@@ -103,7 +103,7 @@ $(EXTERNAL_DIR)/zlib:
 download_protobuf_external: $(EXTERNAL_DIR)/protobuf
 $(EXTERNAL_DIR)/protobuf:
 	@echo "Downloading protobuf source ..."
-	@git clone https://android.googlesource.com/platform/external/protobuf --recurse-submodules --single-branch --branch $(PLATFORM_TOOLS_REF) $(EXTERNAL_DIR)/protobuf $(SUPPRESS_OUTPUT)
+	@git clone https://github.com/protocolbuffers/protobuf --recurse-submodules --single-branch --branch v$$(./utils/get_protobuf_version.sh $(PLATFORM_TOOLS_VERSION)) $(EXTERNAL_DIR)/protobuf $(SUPPRESS_OUTPUT)
 	@rm -rf $(EXTERNAL_DIR)/protobuf/**/.git
 
 ########################
