@@ -74,7 +74,7 @@ $(DEPENDS_DIR)/boringssl:
 ########################
 #   DOWNLOAD HEADERS   #
 ########################
-all_download_headers: download_android_headers download_build_headers download_adbd_auth_headers generate_pt_version_header
+all_download_headers: download_android_headers download_build_headers download_adbd_auth_headers download_brotli_headers generate_pt_version_header
 
 download_android_headers: $(INCLUDES_DIR)/android
 $(INCLUDES_DIR)/android:
@@ -90,6 +90,11 @@ download_adbd_auth_headers: $(INCLUDES_DIR)/adbd_auth.h
 $(INCLUDES_DIR)/adbd_auth.h:
 	@echo "Downloading adbd_auth headers ..."
 	@curl https://android.googlesource.com/platform/frameworks/native/+/refs/tags/$(PLATFORM_TOOLS_REF)/libs/adbd_auth/include/adbd_auth.h?format=text -s | base64 -d > $(INCLUDES_DIR)/adbd_auth.h
+
+download_brotli_headers: $(INCLUDES_DIR)/brotli
+$(INCLUDES_DIR)/brotli:
+	@echo "Downloading brotli headers ..."
+	@bash utils/git_sparse.sh https://android.googlesource.com/platform/external/brotli $(PLATFORM_TOOLS_REF) c/include/brotli/ $(INCLUDES_DIR)/brotli/ $(SUPPRESS_OUTPUT)
 
 generate_pt_version_header: $(INCLUDES_DIR)/platform_tools_version.h
 $(INCLUDES_DIR)/platform_tools_version.h:
