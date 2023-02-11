@@ -7,6 +7,8 @@
 In `src/adb/Android.bp`, find `libadbd_core` library declaration (look at the `srcs` property).
 Then update all `bp_libadb*_SOURCES` variables in `src/Makefile`.
 
+*Note: don't account for the `daemon/*` files as they are destined to the Android devices.*
+
 ### adb
 
 In `src/adb/Android.bp`, find `adb` binary declaration (look at the `srcs` property).

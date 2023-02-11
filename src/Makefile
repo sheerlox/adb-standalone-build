@@ -181,14 +181,7 @@ bp_libadb_posix_SOURCES := \
   adb/sysdeps_unix.cpp \
   adb/sysdeps/posix/network.cpp
 
-bp_libadbd_core_SOURCES := \
-  adb/daemon/adb_wifi.cpp \
-	adb/daemon/auth.cpp \
-	adb/daemon/jdwp_service.cpp \
-	adb/daemon/logging.cpp \
-	adb/daemon/transport_local.cpp
-
-libadb_a_SOURCES := $(bp_libadb_SOURCES) $(bp_libadb_linux_SOURCES) $(bp_libadb_posix_SOURCES) $(bp_libadbd_core_SOURCES)
+libadb_a_SOURCES := $(bp_libadb_SOURCES) $(bp_libadb_linux_SOURCES) $(bp_libadb_posix_SOURCES)
 
 libadb_a_CXXFLAGS := $(ADB_COMMON_FLAGS)
 
