@@ -37,7 +37,8 @@ all: all_download_source all_download_headers all_download_external all_build al
 ########################
 #   DOWNLOAD SOURCE    #
 ########################
-all_download_source: download_adb_source download_libbase_source download_libcutils_source download_diagnose_usb_source download_boringssl_source
+all_download_source: download_adb_source download_libbase_source download_libcutils_source download_libcrypto_utils_source download_diagnose_usb_source \
+	download_boringssl_source
 
 download_adb_source: $(SOURCE_DIR)/adb
 $(SOURCE_DIR)/adb:
@@ -54,6 +55,11 @@ download_libcutils_source: $(DEPENDS_DIR)/cutils
 $(DEPENDS_DIR)/cutils:
 	@echo "Downloading libcutils source ..."
 	@bash utils/git_sparse.sh https://android.googlesource.com/platform/system/core $(PLATFORM_TOOLS_REF) libcutils $(DEPENDS_DIR)/cutils $(SUPPRESS_OUTPUT)
+
+download_libcrypto_utils_source: $(DEPENDS_DIR)/crypto_utils
+$(DEPENDS_DIR)/crypto_utils:
+	@echo "Downloading libcrypto_utils source ..."
+	@bash utils/git_sparse.sh https://android.googlesource.com/platform/system/core $(PLATFORM_TOOLS_REF) libcrypto_utils $(DEPENDS_DIR)/crypto_utils $(SUPPRESS_OUTPUT)
 
 download_diagnose_usb_source: $(DEPENDS_DIR)/diagnose_usb
 $(DEPENDS_DIR)/diagnose_usb:
