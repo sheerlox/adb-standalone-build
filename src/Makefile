@@ -23,6 +23,10 @@ libusb_LIB := libusb-1.0/$(HOSTARCH)/libusb-1.0
 
 DEPENDS_INC := -Iincludes -Idepends/base/include -Idepends/cutils/include -Idepends/boringssl/include
 
+ADB_COMMON_FLAGS := \
+	-DADB_HOST=1 \
+	-DANDROID_BASE_UNIQUE_FD_DISABLE_IMPLICIT_CONVERSION=1
+
 all: $(libdepends_a_TARGET) $(libmdnssd_a_TARGET) $(libadb_a_TARGET) $(adb_TARGET)
 adb: $(libadb_a_TARGET) $(adb_TARGET)
 
@@ -33,8 +37,9 @@ ifneq ($(OUT_DIR), $(wildcard $(OUT_DIR)))
   $(shell mkdir -p $(OUT_DIR))
 endif
 
-
-# libdepends.a
+########################
+#     libdepends       #
+########################
 libdepends_a_INC := -I$(libopenssl_INC) $(DEPENDS_INC)
 
 libdepends_a_SOURCES_CXX := \
@@ -89,26 +94,23 @@ libdepends_a_SOURCES_CXX := \
 libdepends_a_SOURCES_C := \
 	depend/cutils/strlcpy.c
 
-libdepends_a_CXXFLAGS := -DFAKE_LOG_DEVICE=1  -DADB_HOST=1
-
+libdepends_a_CXXFLAGS := -DADB_HOST=1 -DFAKE_LOG_DEVICE=1
 
 libdepends_a_OBJ_CXX := $(patsubst %.cpp,%.o, $(libdepends_a_SOURCES_CXX))
 libdepends_a_OBJ_C := $(patsubst %.c,%.o, $(libdepends_a_SOURCES_C))
 
-
 $(libdepends_a_OBJ_CXX): %.o:%.cpp
 	$(CXX) -c $(libdepends_a_INC) $(libdepends_a_CXXFLAGS) $< -o $@
 $(libdepends_a_OBJ_C):%.o:%.c
-	$(CC) -c  $(libdepends_a_INC) $(libdepends_a_CXXFLAGS) $< -o $@
-
+	$(CC) -c $(libdepends_a_INC) $(libdepends_a_CXXFLAGS) $< -o $@
 
 $(libdepends_a_TARGET): $(OUT_DIR) $(libdepends_a_OBJ_CXX) $(libdepends_a_OBJ_C)
 	ar rc $(libdepends_a_TARGET) $(libdepends_a_OBJ_CXX) $(libdepends_a_OBJ_C)
 
-
-# libmdnssd.a
+########################
+#      libmdnssd       #
+########################
 libmdnssd_a_INC := -Idepends/mdnssd
-
 
 libmdnssd_a_SOURCES_C := \
 	depends/mdnssd/dnssd_clientlib.c \
@@ -144,12 +146,14 @@ libmdnssd_a_CFLAGS := \
 
 libmdnssd_a_OBJ_C := $(patsubst %.c,%.o, $(libmdnssd_a_SOURCES_C))
 $(libmdnssd_a_OBJ_C): %.o:%.c
-	$(CC) -c  $(libmdnssd_a_INC) $(libmdnssd_a_CFLAGS) $< -o $@
+	$(CC) -c $(libmdnssd_a_INC) $(libmdnssd_a_CFLAGS) $< -o $@
 
 $(libmdnssd_a_TARGET): $(OUT_DIR) $(libmdnssd_a_OBJ_C)
 	ar rc $(libmdnssd_a_TARGET) $(libmdnssd_a_OBJ_C)
 
-# libadb.a
+########################
+#       libadb         #
+########################
 libadb_a_INC := -I$(libusb_INC) -I$(libopenssl_INC) $(DEPENDS_INC) -Iadb -Iadb/crypto/include -Iadb/tls/include -Iexternal/protobuf/src -Iadb/proto
 
 bp_libadb_SOURCES := \
@@ -184,17 +188,19 @@ bp_libadbd_core_SOURCES := \
 
 libadb_a_SOURCES := $(bp_libadb_SOURCES) $(bp_libadb_linux_SOURCES) $(bp_libadb_posix_SOURCES) $(bp_libadbd_core_SOURCES)
 
-libadb_a_CXXFLAGS := -DADB_HOST=1 $(ADB_COMMON_CFLAGS) \
+libadb_a_CXXFLAGS := $(ADB_COMMON_FLAGS)
 
 libadb_a_OBJ_CXX := $(patsubst %.cpp,%.o, $(libadb_a_SOURCES))
 
 $(libadb_a_OBJ_CXX): %.o:%.cpp
-	$(CXX) -c  $(libadb_a_INC) $(libadb_a_CXXFLAGS) $< -o $@
+	$(CXX) -c $(libadb_a_INC) $(libadb_a_CXXFLAGS) $< -o $@
 
 $(libadb_a_TARGET): $(OUT_DIR) $(libadb_a_OBJ_CXX)
 	ar rc $(libadb_a_TARGET) $(libadb_a_OBJ_CXX)
 
-# adb
+########################
+#         adb          #
+########################
 adb_INC := -I$(libopenssl_INC) -I$(libusb_INC) -Idepends -Iadb
 
 adb_SOURCES := \
@@ -213,17 +219,17 @@ adb_SOURCES := \
 	adb/client/incremental_utils.cpp \
 	adb/shell_service_protocol.cpp
 
-adb_CXXFLAGS :=	-std=gnu++2a -D_GNU_SOURCE -DADB_HOST=1 $(ADB_COMMON_CFLAGS) -D_Nonnull= -D_Nullable= -fpermissive
+adb_CXXFLAGS :=	-std=gnu++20 -D_GNU_SOURCE $(ADB_COMMON_FLAGS) -D_Nonnull= -D_Nullable= -fpermissive
 
-adb_LDFLAG := $(libadb_a_TARGET) $(libmdnssd_a_TARGET) $(libdepends_a_TARGET) -L$(libusb_LIB) -l:libusb-1.0.a -ludev -L$(libopenssl_LIB) -l:libcrypto.a  -ludev -lpthread -static-libgcc -static-libstdc++
+adb_LDFLAG := $(libadb_a_TARGET) $(libmdnssd_a_TARGET) $(libdepends_a_TARGET) -L$(libusb_LIB) -l:libusb-1.0.a -ludev -L$(libopenssl_LIB) -l:libcrypto.a -ludev -lpthread -static-libgcc -static-libstdc++
 
 adb_OBJ_CXX := $(patsubst %.cpp,%.o, $(adb_SOURCES))
 
 $(adb_OBJ_CXX): %.o:%.cpp
-	$(CXX) -c  $(adb_INC) $(adb_CXXFLAGS) $< -o $@
+	$(CXX) -c $(adb_INC) $(adb_CXXFLAGS) $< -o $@
 
 $(adb_TARGET): $(OUT_DIR) $(adb_OBJ_CXX)
-	$(CXX) -o  $@ $^ $(adb_CXXFLAGS) $(libadb_a_TARGET) $(libmdnssd_a_TARGET) $(libdepends_a_TARGET) $(adb_LDFLAG)
+	$(CXX) -o $@ $^ $(adb_CXXFLAGS) $(libadb_a_TARGET) $(libmdnssd_a_TARGET) $(libdepends_a_TARGET) $(adb_LDFLAG)
 
 clean:
-	rm -rf $(libdepends_a_OBJ_CXX) $(libdepends_a_OBJ_C) $(libadb_a_OBJ_CXX) $(libadb_a_OBJ_CXX) $(adb_OBJ_CXX)  $(libmdnssd_a_OBJ_C) $(OUT_DIR)
+	rm -rf $(libdepends_a_OBJ_CXX) $(libdepends_a_OBJ_C) $(libadb_a_OBJ_CXX) $(libadb_a_OBJ_CXX) $(adb_OBJ_CXX) $(libmdnssd_a_OBJ_C) $(OUT_DIR)
