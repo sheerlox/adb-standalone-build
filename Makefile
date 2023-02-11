@@ -80,7 +80,7 @@ $(DEPENDS_DIR)/boringssl:
 #   DOWNLOAD HEADERS   #
 ########################
 all_download_headers: download_android_headers download_build_headers download_adbd_auth_headers download_brotli_headers download_androidfw_headers \
-	download_incfs_util_headers generate_pt_version_header
+	download_incfs_util_headers download_fmtlib_headers generate_pt_version_header
 
 download_android_headers: $(INCLUDES_DIR)/android
 $(INCLUDES_DIR)/android:
@@ -111,6 +111,11 @@ download_incfs_util_headers: $(INCLUDES_DIR)/util
 $(INCLUDES_DIR)/util:
 	@echo "Downloading incremental delivery util headers ..."
 	@bash utils/git_sparse.sh https://android.googlesource.com/platform/system/incremental_delivery $(PLATFORM_TOOLS_REF) incfs/util/include/util/ $(INCLUDES_DIR)/util/ $(SUPPRESS_OUTPUT)
+
+download_fmtlib_headers: $(INCLUDES_DIR)/fmt
+$(INCLUDES_DIR)/fmt:
+	@echo "Downloading fmtlib headers ..."
+	@bash utils/git_sparse.sh https://android.googlesource.com/platform/external/fmtlib $(PLATFORM_TOOLS_REF) include/fmt/ $(INCLUDES_DIR)/fmt/ $(SUPPRESS_OUTPUT)
 
 generate_pt_version_header: $(INCLUDES_DIR)/platform_tools_version.h
 $(INCLUDES_DIR)/platform_tools_version.h:
