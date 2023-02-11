@@ -74,7 +74,8 @@ $(DEPENDS_DIR)/boringssl:
 ########################
 #   DOWNLOAD HEADERS   #
 ########################
-all_download_headers: download_android_headers download_build_headers download_adbd_auth_headers download_brotli_headers generate_pt_version_header
+all_download_headers: download_android_headers download_build_headers download_adbd_auth_headers download_brotli_headers download_androidfw_headers \
+	download_incfs_util_headers generate_pt_version_header
 
 download_android_headers: $(INCLUDES_DIR)/android
 $(INCLUDES_DIR)/android:
@@ -95,6 +96,16 @@ download_brotli_headers: $(INCLUDES_DIR)/brotli
 $(INCLUDES_DIR)/brotli:
 	@echo "Downloading brotli headers ..."
 	@bash utils/git_sparse.sh https://android.googlesource.com/platform/external/brotli $(PLATFORM_TOOLS_REF) c/include/brotli/ $(INCLUDES_DIR)/brotli/ $(SUPPRESS_OUTPUT)
+
+download_androidfw_headers: $(INCLUDES_DIR)/androidfw
+$(INCLUDES_DIR)/androidfw:
+	@echo "Downloading androidfw headers ..."
+	@bash utils/git_sparse.sh https://android.googlesource.com/platform/frameworks/base $(PLATFORM_TOOLS_REF) libs/androidfw/include/androidfw/ $(INCLUDES_DIR)/androidfw/ $(SUPPRESS_OUTPUT)
+
+download_incfs_util_headers: $(INCLUDES_DIR)/util
+$(INCLUDES_DIR)/util:
+	@echo "Downloading incremental delivery util headers ..."
+	@bash utils/git_sparse.sh https://android.googlesource.com/platform/system/incremental_delivery $(PLATFORM_TOOLS_REF) incfs/util/include/util/ $(INCLUDES_DIR)/util/ $(SUPPRESS_OUTPUT)
 
 generate_pt_version_header: $(INCLUDES_DIR)/platform_tools_version.h
 $(INCLUDES_DIR)/platform_tools_version.h:
