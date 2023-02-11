@@ -5,7 +5,7 @@
 set -e
 
 if [ $# -ne 4 ] ; then
-    echo 'Usage: ./scripts/git_sparse.sh <repository_url> <ref> <patterns> <relative_dest_dir>'
+    echo 'Usage: ./utils/git_sparse.sh <repository_url> <ref> <patterns> <relative_dest_dir>'
     exit 1
 fi
 REPOSITORY=$1
