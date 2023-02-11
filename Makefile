@@ -138,10 +138,12 @@ $(EXTERNAL_DIR)/protobuf/protoc:
 ########################
 all_compile: compile_proto_files
 
-compile_proto_files: download_adb_source build_protobuf_external $(SOURCE_DIR)/adb/proto/*.pb.h
+compile_proto_files: download_adb_source build_protobuf_external $(SOURCE_DIR)/adb/proto/*.pb.h $(SOURCE_DIR)/adb/fastdeploy/proto/*.pb.h
 $(SOURCE_DIR)/adb/proto/*.pb.h:
+$(SOURCE_DIR)/adb/fastdeploy/proto/*.pb.h:
 	@echo "Compiling .proto files ..."
 	@$(EXTERNAL_DIR)/protobuf/protoc -I=$(SOURCE_DIR)/adb/proto/ --cpp_out=$(SOURCE_DIR)/adb/proto/ $(SOURCE_DIR)/adb/proto/*.proto
+	@$(EXTERNAL_DIR)/protobuf/protoc -I=$(SOURCE_DIR)/adb/fastdeploy/proto/ --cpp_out=$(SOURCE_DIR)/adb/fastdeploy/proto/ $(SOURCE_DIR)/adb/fastdeploy/proto/*.proto
 
 ########################
 #         MISC         #
