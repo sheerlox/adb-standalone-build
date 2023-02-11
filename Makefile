@@ -104,7 +104,7 @@ $(INCLUDES_DIR)/platform_tools_version.h:
 ########################
 #  DOWNLOAD EXTERNAL   #
 ########################
-all_download_external: download_zlib_external download_protobuf_external
+all_download_external: download_zlib_external download_protobuf_external download_lz4_external download_zstd_external
 
 download_zlib_external: $(EXTERNAL_DIR)/zlib
 $(EXTERNAL_DIR)/zlib:
@@ -116,6 +116,18 @@ $(EXTERNAL_DIR)/protobuf:
 	@echo "Downloading protobuf source ..."
 	@git clone https://github.com/protocolbuffers/protobuf --recurse-submodules --single-branch --branch v$$(./utils/get_protobuf_version.sh $(PLATFORM_TOOLS_VERSION)) $(EXTERNAL_DIR)/protobuf $(SUPPRESS_OUTPUT)
 	@rm -rf $(EXTERNAL_DIR)/protobuf/**/.git
+
+download_lz4_external: $(EXTERNAL_DIR)/lz4
+$(EXTERNAL_DIR)/lz4:
+	@echo "Downloading lz4 source ..."
+	@git clone https://github.com/lz4/lz4 --single-branch --branch v$$(./utils/get_lz4_version.sh $(PLATFORM_TOOLS_VERSION)) $(EXTERNAL_DIR)/lz4 $(SUPPRESS_OUTPUT)
+	@rm -rf $(EXTERNAL_DIR)/lz4/.git
+
+download_zstd_external: $(EXTERNAL_DIR)/zstd
+$(EXTERNAL_DIR)/zstd:
+	@echo "Downloading zstd source ..."
+	@git clone https://github.com/facebook/zstd --single-branch --branch v$$(./utils/get_zstd_version.sh $(PLATFORM_TOOLS_VERSION)) $(EXTERNAL_DIR)/zstd $(SUPPRESS_OUTPUT)
+	@rm -rf $(EXTERNAL_DIR)/zstd/.git
 
 ########################
 #        BUILD         #

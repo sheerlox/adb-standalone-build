@@ -23,7 +23,7 @@ libusb_LIB := libusb-1.0/$(HOSTARCH)/libusb-1.0
 
 DEPENDS_INC := $(addprefix -I,$(wildcard depends/*/include))
 ADB_INC := -Iadb -Iadb/proto $(addprefix -I,$(wildcard adb/*/include))
-EXTERNAL_INC := -Iexternal/protobuf/src
+EXTERNAL_INC := -Iexternal/protobuf/src -Iexternal/lz4/lib -Iexternal/zstd/lib
 
 ADB_COMMON_FLAGS := \
 	-DADB_HOST=1 \
