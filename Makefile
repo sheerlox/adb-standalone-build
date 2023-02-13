@@ -91,6 +91,7 @@ download_android_headers: $(INCLUDES_DIR)/android
 $(INCLUDES_DIR)/android:
 	@echo "Downloading android headers ..."
 	@bash utils/git_sparse.sh https://android.googlesource.com/platform/system/logging $(PLATFORM_TOOLS_REF) liblog/include/android/ $(INCLUDES_DIR)/android/ $(SUPPRESS_OUTPUT)
+	@bash utils/git_sparse.sh https://android.googlesource.com/platform/frameworks/native $(PLATFORM_TOOLS_REF) include/android/* $(INCLUDES_DIR)/android/ $(SUPPRESS_OUTPUT)
 
 download_build_headers: $(INCLUDES_DIR)/build
 $(INCLUDES_DIR)/build:
