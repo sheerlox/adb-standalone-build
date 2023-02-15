@@ -85,7 +85,7 @@ $(DEPENDS_DIR)/boringssl:
 #   DOWNLOAD HEADERS   #
 ########################
 all_download_headers: download_android_headers download_build_headers download_adbd_auth_headers download_brotli_headers download_androidfw_headers \
-	download_incfs_util_headers download_fmtlib_headers download_system_headers generate_pt_version_header
+	download_incfs_util_headers download_fmtlib_headers download_system_headers generate_pt_version_header generate_deployagent_includes
 
 download_android_headers: $(INCLUDES_DIR)/android
 $(INCLUDES_DIR)/android:
@@ -132,6 +132,13 @@ generate_pt_version_header: $(INCLUDES_DIR)/platform_tools_version.h
 $(INCLUDES_DIR)/platform_tools_version.h:
 	@echo "Generating platform tools version header ..."
 	@echo '#define PLATFORM_TOOLS_VERSION "$(PLATFORM_TOOLS_VERSION)"' > $(INCLUDES_DIR)/platform_tools_version.h
+
+generate_deployagent_includes: $(SOURCE_DIR)/adb/deployagent.inc $(SOURCE_DIR)/adb/deployagentscript.inc
+$(SOURCE_DIR)/adb/deployagent.inc:
+$(SOURCE_DIR)/adb/deployagentscript.inc:
+	@echo "Generating deployagent includes ..."
+	@(echo 'unsigned char kDeployAgent[] = {' && xxd -i <$(SOURCE_DIR)/adb/fastdeploy/deployagent/src/com/android/fastdeploy/DeployAgent.java && echo '};') > $(SOURCE_DIR)/adb/deployagent.inc
+	@(echo 'unsigned char kDeployAgentScript[] = {' && xxd -i <$(SOURCE_DIR)/adb/fastdeploy/deployagent/src/com/android/fastdeploy/DeployAgent.java && echo '};') > $(SOURCE_DIR)/adb/deployagentscript.inc
 
 ########################
 #  DOWNLOAD EXTERNAL   #
