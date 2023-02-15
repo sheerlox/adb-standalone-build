@@ -216,7 +216,7 @@ adb_SOURCES := \
 
 adb_CXXFLAGS :=	-std=gnu++20 -D_GNU_SOURCE $(ADB_COMMON_FLAGS) -D_Nonnull= -D_Nullable= -fpermissive
 
-adb_LDFLAG := $(libadb_a_TARGET) $(libmdnssd_a_TARGET) $(libdepends_a_TARGET) -L$(libusb_LIB) -l:libusb-1.0.a -ludev -L$(libopenssl_LIB) -l:libcrypto.a -ludev -lpthread -static-libgcc -static-libstdc++
+adb_LDFLAG := -L$(libusb_LIB) -l:libusb-1.0.a -ludev -L$(libopenssl_LIB) -l:libcrypto.a -ludev -lpthread -static-libgcc -static-libstdc++
 
 adb_OBJ_CXX := $(patsubst %.cpp,%.o, $(adb_SOURCES))
 
