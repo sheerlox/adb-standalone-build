@@ -86,21 +86,24 @@ libdepends_a_SOURCES_CXX := \
 	depends/cutils/trace-host.cpp \
 	depends/diagnose_usb/diagnose_usb.cpp
 
-libdepends_a_SOURCES_C := \
-	depend/cutils/strlcpy.c
+libdepends_a_SOURCES_CC := \
+	adb/proto/adb_known_hosts.pb.cc \
+	adb/proto/app_processes.pb.cc \
+	adb/proto/key_type.pb.cc \
+	adb/proto/pairing.pb.cc
 
 libdepends_a_CXXFLAGS := -DADB_HOST=1 -DFAKE_LOG_DEVICE=1
 
 libdepends_a_OBJ_CXX := $(patsubst %.cpp,%.o, $(libdepends_a_SOURCES_CXX))
-libdepends_a_OBJ_C := $(patsubst %.c,%.o, $(libdepends_a_SOURCES_C))
+libdepends_a_OBJ_CC := $(patsubst %.cc,%.o, $(libdepends_a_SOURCES_CC))
 
 $(libdepends_a_OBJ_CXX): %.o:%.cpp
 	$(CXX) -c $(libdepends_a_INC) $(libdepends_a_CXXFLAGS) $< -o $@
-$(libdepends_a_OBJ_C):%.o:%.c
-	$(CC) -c $(libdepends_a_INC) $(libdepends_a_CXXFLAGS) $< -o $@
+$(libdepends_a_OBJ_CC): %.o:%.cc
+	$(CXX) -c $(libdepends_a_INC) $(libdepends_a_CXXFLAGS) $< -o $@
 
-$(libdepends_a_TARGET): $(OUT_DIR) $(libdepends_a_OBJ_CXX) $(libdepends_a_OBJ_C)
-	ar rc $(libdepends_a_TARGET) $(libdepends_a_OBJ_CXX) $(libdepends_a_OBJ_C)
+$(libdepends_a_TARGET): $(libdepends_a_OBJ_CXX) $(libdepends_a_OBJ_CC)
+	ar rc $(libdepends_a_TARGET) $(libdepends_a_OBJ_CXX) $(libdepends_a_OBJ_CC)
 
 ########################
 #       libadb         #
