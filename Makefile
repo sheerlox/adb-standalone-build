@@ -194,7 +194,7 @@ $(EXTERNAL_DIR)/mdnsresponder:
 ########################
 #        BUILD         #
 ########################
-all_build: build_zlib_external build_protobuf_external build_libusb_external
+all_build: build_zlib_external build_protobuf_external build_libusb_external build_boringssl_external
 
 build_zlib_external: download_zlib_external $(EXTERNAL_DIR)/zlib/libz.so
 $(EXTERNAL_DIR)/zlib/libz.so:
@@ -218,6 +218,22 @@ $(EXTERNAL_DIR)/libusb/libusb/.libs/libusb-1.0.a:
 	@cd $(EXTERNAL_DIR)/libusb; \
 		env ./autogen.sh --enable-static --disable-shared $(SUPPRESS_OUTPUT); \
 		make $(SUPPRESS_OUTPUT);
+
+build_boringssl_external: download_boringssl_external $(EXTERNAL_DIR)/boringssl/build/crypto/libcrypto.a $(EXTERNAL_DIR)/boringssl/build/ssl/libssl.a
+$(EXTERNAL_DIR)/boringssl/build/crypto/libcrypto.a:
+$(EXTERNAL_DIR)/boringssl/build/ssl/libssl.a:
+	@echo "Building boringssl ..."
+	@bash utils/git_sparse.sh https://android.googlesource.com/platform/external/googletest $(PLATFORM_TOOLS_REF) googletest/ $(EXTERNAL_DIR)/boringssl/third_party/googletest/ $(SUPPRESS_OUTPUT); \
+		cd src/external/boringssl/; \
+		sed -i 's/-Wformat=2 //' CMakeLists.txt; \
+		mkdir build && cd build; \
+		CC=/usr/bin/clang CXX=/usr/bin/clang++ cmake .. $(SUPPRESS_OUTPUT); \
+		make $(SUPPRESS_OUTPUT); \
+		echo "Testing boringssl build ..."; \
+		cd ..; \
+		go run util/all_tests.go $(SUPPRESS_OUTPUT); \
+		cd ssl/test/runner; \
+		go test $(SUPPRESS_OUTPUT)
 
 ########################
 #       COMPILE        #
