@@ -3,6 +3,7 @@ SHELL := /bin/bash
 PLATFORM_TOOLS_VERSION := 31.0.0
 PLATFORM_TOOLS_REF := platform-tools-$(PLATFORM_TOOLS_VERSION)
 
+STAMPS_DIR := .stamps
 SOURCE_DIR := $(abspath src)
 DEPENDS_DIR := $(SOURCE_DIR)/depends
 INCLUDES_DIR := $(SOURCE_DIR)/includes
@@ -14,6 +15,9 @@ NPROCS := $(shell grep -c ^processor /proc/cpuinfo)
 SUPPRESS_OUTPUT := >/dev/null 2>&1
 
 # create working directories if they don't exist
+ifneq ($(STAMPS_DIR), $(wildcard $(STAMPS_DIR)))
+  $(shell mkdir -p $(STAMPS_DIR))
+endif
 ifneq ($(DEPENDS_DIR), $(wildcard $(DEPENDS_DIR)))
   $(shell mkdir -p $(DEPENDS_DIR))
 endif
@@ -33,7 +37,7 @@ else
   $(info Platform Tools version $(PLATFORM_TOOLS_VERSION) found!)
 endif
 
-all: all_download_source all_download_headers all_download_external all_build all_compile
+all: all_download_source all_patch_source all_download_headers all_download_external all_build all_compile
 
 ########################
 #   DOWNLOAD SOURCE    #
@@ -76,6 +80,21 @@ download_diagnose_usb_source: $(DEPENDS_DIR)/diagnose_usb
 $(DEPENDS_DIR)/diagnose_usb:
 	@echo "Downloading diagnose_usb source ..."
 	@bash utils/git_sparse.sh https://android.googlesource.com/platform/system/core $(PLATFORM_TOOLS_REF) diagnose_usb $(DEPENDS_DIR)/diagnose_usb $(SUPPRESS_OUTPUT)
+
+########################
+#     PATCH SOURCE     #
+########################
+all_patch_source: patch_adb_source
+
+patch_adb_source: $(STAMPS_DIR)/patch_adb_source
+$(STAMPS_DIR)/patch_adb_source:
+	@echo "Patching adb source ..."
+# if 31.0.0 >= $PLATFORM_TOOLS_VERSION < 34.0.0
+	@if [ $(shell ./utils/semver.sh compare $(PLATFORM_TOOLS_VERSION) 34.0.0) -eq -1 ] && [ $(shell ./utils/semver.sh compare 31.0.0 $(PLATFORM_TOOLS_VERSION)) -le 0 ]; \
+		then \
+			sed -i '/^namespace adb.*/i #include <string.h>\n' $(SOURCE_DIR)/adb/crypto/x509_generator.cpp; \
+		fi
+	@touch $(STAMPS_DIR)/patch_adb_source
 
 ########################
 #   DOWNLOAD HEADERS   #
@@ -253,4 +272,4 @@ $(PROTO_TARGETS)&:
 #         MISC         #
 ########################
 clean:
-	@rm -rf $(SOURCE_DIR)/adb $(DEPENDS_DIR) $(INCLUDES_DIR) $(EXTERNAL_DIR)
+	@rm -rf $(SOURCE_DIR)/adb $(STAMPS_DIR) $(DEPENDS_DIR) $(INCLUDES_DIR) $(EXTERNAL_DIR)
