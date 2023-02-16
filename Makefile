@@ -38,7 +38,7 @@ all: all_download_source all_download_headers all_download_external all_build al
 #   DOWNLOAD SOURCE    #
 ########################
 all_download_source: download_adb_source download_libbase_source download_libcutils_source download_libcrypto_utils_source download_diagnose_usb_source \
-	download_libutils_source download_liblog_source download_boringssl_source
+	download_libutils_source download_liblog_source
 
 download_adb_source: $(SOURCE_DIR)/adb
 $(SOURCE_DIR)/adb:
@@ -75,11 +75,6 @@ download_diagnose_usb_source: $(DEPENDS_DIR)/diagnose_usb
 $(DEPENDS_DIR)/diagnose_usb:
 	@echo "Downloading diagnose_usb source ..."
 	@bash utils/git_sparse.sh https://android.googlesource.com/platform/system/core $(PLATFORM_TOOLS_REF) diagnose_usb $(DEPENDS_DIR)/diagnose_usb $(SUPPRESS_OUTPUT)
-
-download_boringssl_source: $(DEPENDS_DIR)/boringssl
-$(DEPENDS_DIR)/boringssl:
-	@echo "Downloading boringssl source ..."
-	@bash utils/git_sparse.sh https://android.googlesource.com/platform/external/boringssl $(PLATFORM_TOOLS_REF) src $(DEPENDS_DIR)/boringssl $(SUPPRESS_OUTPUT)
 
 ########################
 #   DOWNLOAD HEADERS   #
@@ -154,7 +149,7 @@ $(SOURCE_DIR)/adb/deployagentscript.inc:
 ########################
 #  DOWNLOAD EXTERNAL   #
 ########################
-all_download_external: download_zlib_external download_protobuf_external download_lz4_external download_zstd_external
+all_download_external: download_zlib_external download_protobuf_external download_boringssl_external download_libusb_external download_lz4_external download_zstd_external
 
 download_zlib_external: $(EXTERNAL_DIR)/zlib
 $(EXTERNAL_DIR)/zlib:
@@ -166,6 +161,17 @@ $(EXTERNAL_DIR)/protobuf:
 	@echo "Downloading protobuf source ..."
 	@git clone https://github.com/protocolbuffers/protobuf --recurse-submodules --single-branch --branch v$$(./utils/get_protobuf_version.sh $(PLATFORM_TOOLS_VERSION)) $(EXTERNAL_DIR)/protobuf $(SUPPRESS_OUTPUT)
 	@rm -rf $(EXTERNAL_DIR)/protobuf/**/.git
+
+download_boringssl_external: $(EXTERNAL_DIR)/boringssl
+$(EXTERNAL_DIR)/boringssl:
+	@echo "Downloading boringssl source ..."
+	@bash utils/git_sparse.sh https://android.googlesource.com/platform/external/boringssl $(PLATFORM_TOOLS_REF) src $(EXTERNAL_DIR)/boringssl $(SUPPRESS_OUTPUT)
+
+download_libusb_external: $(EXTERNAL_DIR)/libusb
+$(EXTERNAL_DIR)/libusb:
+	@echo "Downloading libusb source ..."
+	@git clone https://android.googlesource.com/platform/external/libusb --single-branch --branch $(PLATFORM_TOOLS_REF) $(EXTERNAL_DIR)/libusb/ $(SUPPRESS_OUTPUT)
+	# @bash utils/git_sparse.sh https://android.googlesource.com/platform/external/libusb $(PLATFORM_TOOLS_REF) libusb/ $(EXTERNAL_DIR)/libusb/ $(SUPPRESS_OUTPUT)
 
 download_lz4_external: $(EXTERNAL_DIR)/lz4
 $(EXTERNAL_DIR)/lz4:
