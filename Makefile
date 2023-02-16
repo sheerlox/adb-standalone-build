@@ -149,7 +149,8 @@ $(SOURCE_DIR)/adb/deployagentscript.inc:
 ########################
 #  DOWNLOAD EXTERNAL   #
 ########################
-all_download_external: download_zlib_external download_protobuf_external download_boringssl_external download_libusb_external download_lz4_external download_zstd_external
+all_download_external: download_zlib_external download_protobuf_external download_boringssl_external download_libusb_external	download_lz4_external \
+	download_zstd_external download_mdnsresponder_external
 
 download_zlib_external: $(EXTERNAL_DIR)/zlib
 $(EXTERNAL_DIR)/zlib:
@@ -171,7 +172,6 @@ download_libusb_external: $(EXTERNAL_DIR)/libusb
 $(EXTERNAL_DIR)/libusb:
 	@echo "Downloading libusb source ..."
 	@git clone https://android.googlesource.com/platform/external/libusb --single-branch --branch $(PLATFORM_TOOLS_REF) $(EXTERNAL_DIR)/libusb/ $(SUPPRESS_OUTPUT)
-	# @bash utils/git_sparse.sh https://android.googlesource.com/platform/external/libusb $(PLATFORM_TOOLS_REF) libusb/ $(EXTERNAL_DIR)/libusb/ $(SUPPRESS_OUTPUT)
 
 download_lz4_external: $(EXTERNAL_DIR)/lz4
 $(EXTERNAL_DIR)/lz4:
@@ -184,6 +184,11 @@ $(EXTERNAL_DIR)/zstd:
 	@echo "Downloading zstd source ..."
 	@git clone https://github.com/facebook/zstd --single-branch --branch v$$(./utils/get_zstd_version.sh $(PLATFORM_TOOLS_VERSION)) $(EXTERNAL_DIR)/zstd $(SUPPRESS_OUTPUT)
 	@rm -rf $(EXTERNAL_DIR)/zstd/.git
+
+download_mdnsresponder_external: $(EXTERNAL_DIR)/mdnsresponder
+$(EXTERNAL_DIR)/mdnsresponder:
+	@echo "Downloading mdnsresponder source ..."
+	@git clone https://android.googlesource.com/platform/external/mdnsresponder --single-branch --branch $(PLATFORM_TOOLS_REF) $(EXTERNAL_DIR)/mdnsresponder/ $(SUPPRESS_OUTPUT)
 
 ########################
 #        BUILD         #
