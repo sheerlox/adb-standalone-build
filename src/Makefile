@@ -35,7 +35,7 @@ adb: $(libadb_a_TARGET) $(adb_TARGET)
 ########################
 #     libdepends       #
 ########################
-libdepends_a_INC := $(DEPENDS_INC)
+libdepends_a_INC := $(DEPENDS_INC) $(EXTERNAL_INC)
 
 libdepends_a_SOURCES_CXX := \
 	depends/base/chrono_utils.cpp \
@@ -43,48 +43,14 @@ libdepends_a_SOURCES_CXX := \
 	depends/base/file.cpp \
 	depends/base/logging.cpp \
 	depends/base/mapped_file.cpp \
+	depends/base/parsebool.cpp \
 	depends/base/parsenetaddress.cpp \
 	depends/base/properties.cpp \
 	depends/base/stringprintf.cpp \
 	depends/base/strings.cpp \
 	depends/base/threads.cpp \
-	depends/base/test_utils.cpp \
-	depends/base/errors_unix.cpp \
-	depends/log/config_read.cpp \
-	depends/log/config_write.cpp \
-	depends/log/log_event_list.cpp \
-	depends/log/log_event_write.cpp \
-	depends/log/logger_lock.cpp \
-	depends/log/logger_name.cpp \
-	depends/log/logger_read.cpp \
-	depends/log/logger_write.cpp \
-	depends/log/logprint.cpp \
-	depends/log/stderr_write.cpp \
-	depends/log/fake_log_device.cpp \
-	depends/log/fake_writer.cpp \
-	depends/cutils/config_utils.cpp \
-	depends/cutils/canned_fs_config.cpp \
-	depends/cutils/iosched_policy.cpp \
-	depends/cutils/load_file.cpp \
-	depends/cutils/native_handle.cpp \
-	depends/cutils/record_stream.cpp \
-	depends/cutils/sockets.cpp \
-	depends/cutils/strdup16to8.cpp \
-	depends/cutils/strdup8to16.cpp \
-	depends/cutils/threads.cpp \
-	depends/cutils/fs.cpp \
-	depends/cutils/hashmap.cpp \
-	depends/cutils/multiuser.cpp \
-	depends/cutils/socket_inaddr_any_server_unix.cpp \
-	depends/cutils/socket_local_client_unix.cpp \
-	depends/cutils/socket_local_server_unix.cpp \
-	depends/cutils/socket_network_client_unix.cpp \
-	depends/cutils/sockets_unix.cpp \
-	depends/cutils/str_parms.cpp \
-	depends/cutils/ashmem-host.cpp \
-	depends/cutils/fs_config.cpp \
-	depends/cutils/trace-host.cpp \
-	depends/diagnose_usb/diagnose_usb.cpp
+	depends/crypto_utils/android_pubkey.cpp \
+	depends/cutils/sockets.cpp
 
 libdepends_a_SOURCES_CC := \
 	adb/proto/adb_known_hosts.pb.cc \

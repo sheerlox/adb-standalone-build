@@ -1,6 +1,11 @@
 # Methodolody
 
-## Updating `libadb` & `adb` source files list in `src/Makefile`
+## Updating `libdepends`, `libadb` & `adb` source files list in `src/Makefile`
+
+### libdepends
+This one is really hacky: run `./utils/generate_libdepends_sources.sh`, replace `.???` with the correct source extensions and copy the result to the `libdepends_a_SOURCES_CXX` variable in `src/Makefile`.
+
+There will be multiple entries to remove from that result (e.g. `android-base/endian.cpp` only exists as a header, `openssl/*` are loaded from the built libssl, `libusb/libusb.cpp` is loaded from the built `libusb-1.0.a` and `arpa/inet.h` / `netinet/in.h` are headers provided by the standard C library).
 
 ### libadb
 
