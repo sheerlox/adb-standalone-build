@@ -20,7 +20,7 @@ libadb_a_TARGET := $(OUT_DIR)/libadb.a
 adb_TARGET := $(OUT_DIR)/adb
 
 DEPENDS_INC := $(addprefix -I,$(wildcard depends/*/include))
-ADB_INC := -Iadb -Iadb/proto $(addprefix -I,$(wildcard adb/*/include))
+ADB_INC := -Iadb -Iadb/crypto -Iadb/proto $(addprefix -I,$(wildcard adb/*/include))
 EXTERNAL_INC := -Iexternal/protobuf/src -Iexternal/boringssl/include -Iexternal/libusb/include -Iexternal/lz4/lib -Iexternal/zstd/lib -Iexternal/mdnsresponder/mDNSShared
 
 ADB_COMMON_FLAGS := \
@@ -35,9 +35,12 @@ adb: $(libadb_a_TARGET) $(adb_TARGET)
 ########################
 #     libdepends       #
 ########################
-libdepends_a_INC := $(DEPENDS_INC) $(EXTERNAL_INC)
+libdepends_a_INC := $(ADB_INC) $(DEPENDS_INC) $(EXTERNAL_INC)
 
 libdepends_a_SOURCES_CXX := \
+	adb/crypto/key.cpp \
+	adb/crypto/rsa_2048_key.cpp \
+	adb/crypto/x509_generator.cpp \
 	depends/base/chrono_utils.cpp \
 	depends/base/cmsg.cpp \
 	depends/base/file.cpp \
