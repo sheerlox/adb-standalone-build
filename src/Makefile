@@ -151,7 +151,7 @@ $(adb_OBJ_CXX): %.o:%.cpp
 	$(CXX) -c $(adb_INC) $(adb_CXXFLAGS) $< -o $@
 
 $(adb_TARGET): $(adb_OBJ_CXX)
-	$(CXX) -o $@ $^ $(adb_CXXFLAGS) $(libadb_a_TARGET) $(libdepends_a_TARGET) $(adb_LDFLAG)
+	$(CXX) -o $@ $^ $(adb_CXXFLAGS) $(libadb_a_TARGET) $(libdepends_a_TARGET) external/protobuf/libprotobuf.a $(adb_LDFLAG)
 
 clean:
 	rm -rf $(libdepends_a_OBJ_CXX) $(libdepends_a_OBJ_C) $(libadb_a_OBJ_CXX) $(libadb_a_OBJ_CXX) $(adb_OBJ_CXX) $(OUT_DIR)
