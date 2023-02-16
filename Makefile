@@ -10,6 +10,7 @@ EXTERNAL_DIR := $(SOURCE_DIR)/external
 
 NPROCS := $(shell grep -c ^processor /proc/cpuinfo)
 
+# comment out the following line to get full commands output
 SUPPRESS_OUTPUT := >/dev/null 2>&1
 
 # create working directories if they don't exist
@@ -24,7 +25,7 @@ ifneq ($(EXTERNAL_DIR), $(wildcard $(EXTERNAL_DIR)))
 endif
 
 $(info Checking if Platform Tools version $(PLATFORM_TOOLS_VERSION) exists...)
-VERSION_EXISTS := $(shell git ls-remote --exit-code --tags https://android.googlesource.com/platform/manifest refs/tags/$(PLATFORM_TOOLS_REF) $(SUPPRESS_OUTPUT); echo $$?)
+VERSION_EXISTS := $(shell git ls-remote --exit-code --tags https://android.googlesource.com/platform/manifest refs/tags/$(PLATFORM_TOOLS_REF) >/dev/null 2>&1; echo $$?)
 # $(info $(VERSION_EXISTS))
 ifneq ($(VERSION_EXISTS),0)
   $(error Platform Tools version $(PLATFORM_TOOLS_VERSION) doesn't exist. Please refer to https://android.googlesource.com/platform/manifest/+refs for available tags)
@@ -193,7 +194,7 @@ $(EXTERNAL_DIR)/mdnsresponder:
 ########################
 #        BUILD         #
 ########################
-all_build: build_zlib_external build_protobuf_external
+all_build: build_zlib_external build_protobuf_external build_libusb_external
 
 build_zlib_external: download_zlib_external $(EXTERNAL_DIR)/zlib/libz.so
 $(EXTERNAL_DIR)/zlib/libz.so:
@@ -210,6 +211,13 @@ $(EXTERNAL_DIR)/protobuf/protoc:
 		cmake --build . -j$(NPROCS) $(SUPPRESS_OUTPUT); \
 		echo "Testing protobuf build ..."; \
 		cmake --build . --target check $(SUPPRESS_OUTPUT)
+
+build_libusb_external: download_libusb_external $(EXTERNAL_DIR)/libusb/libusb/.libs/libusb-1.0.a
+$(EXTERNAL_DIR)/libusb/libusb/.libs/libusb-1.0.a:
+	@echo "Building libusb ..."
+	@cd $(EXTERNAL_DIR)/libusb; \
+		env ./autogen.sh --enable-static --disable-shared $(SUPPRESS_OUTPUT); \
+		make $(SUPPRESS_OUTPUT);
 
 ########################
 #       COMPILE        #

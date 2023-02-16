@@ -4,7 +4,15 @@ This project aims to build standalone `adb` for the arm/arm64 platform from down
 
 ## Requirements
 
-TODO
+- `autoconf` (to build libusb)
+- `libtool` (to build libusb)
+- `libudev1` (to build libusb)
+- `libudev-dev` (to build libusb)
+
+For Debian / Ubuntu:
+```bash
+sudo apt-get install autoconf libtool libudev1 libudev-dev
+```
 
 ## Resources
 - https://github.com/stevenrao/adb-proj

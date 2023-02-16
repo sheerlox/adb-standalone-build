@@ -8,17 +8,16 @@ HOSTARCH := $(shell uname -m | \
 	-e s/macppc/powerpc/)
 OUT_DIR := ../out/$(HOSTARCH)
 
+ifneq ($(OUT_DIR), $(wildcard $(OUT_DIR)))
+  $(shell mkdir -p $(OUT_DIR))
+endif
+
 CXX = clang++ -std=c++20
 CC  = clang
 
 libdepends_a_TARGET := $(OUT_DIR)/libdepends.a
 libadb_a_TARGET := $(OUT_DIR)/libadb.a
 adb_TARGET := $(OUT_DIR)/adb
-
-libopenssl_INC := openssl/$(HOSTARCH)/include
-libopenssl_LIB := openssl/$(HOSTARCH)/lib
-libusb_INC := libusb-1.0/$(HOSTARCH)
-libusb_LIB := libusb-1.0/$(HOSTARCH)/libusb-1.0
 
 DEPENDS_INC := $(addprefix -I,$(wildcard depends/*/include))
 ADB_INC := -Iadb -Iadb/proto $(addprefix -I,$(wildcard adb/*/include))
@@ -32,11 +31,6 @@ all: $(libdepends_a_TARGET) $(libadb_a_TARGET) $(adb_TARGET)
 adb: $(libadb_a_TARGET) $(adb_TARGET)
 
 .PHONY: all
-
-$(OUT_DIR):
-ifneq ($(OUT_DIR), $(wildcard $(OUT_DIR)))
-  $(shell mkdir -p $(OUT_DIR))
-endif
 
 ########################
 #     libdepends       #
@@ -128,7 +122,16 @@ bp_libadb_SOURCES := \
   adb/sysdeps/errno.cpp \
   adb/transport.cpp \
   adb/transport_fd.cpp \
-  adb/types.cpp
+  adb/types.cpp \
+	adb/client/auth.cpp \
+	adb/client/adb_wifi.cpp \
+	adb/client/usb_libusb.cpp \
+	adb/client/usb_dispatch.cpp \
+	adb/client/transport_local.cpp \
+	adb/client/transport_mdns.cpp \
+	adb/client/mdns_utils.cpp \
+	adb/client/transport_usb.cpp \
+	adb/client/pairing/pairing_client.cpp
 
 bp_libadb_linux_SOURCES := adb/fdevent/fdevent_epoll.cpp
 
@@ -145,7 +148,7 @@ libadb_a_OBJ_CXX := $(patsubst %.cpp,%.o, $(libadb_a_SOURCES))
 $(libadb_a_OBJ_CXX): %.o:%.cpp
 	$(CXX) -c $(libadb_a_INC) $(libadb_a_CXXFLAGS) $< -o $@
 
-$(libadb_a_TARGET): $(OUT_DIR) $(libadb_a_OBJ_CXX)
+$(libadb_a_TARGET): $(libadb_a_OBJ_CXX)
 	ar rc $(libadb_a_TARGET) $(libadb_a_OBJ_CXX)
 
 ########################
@@ -171,14 +174,14 @@ adb_SOURCES := \
 
 adb_CXXFLAGS :=	-std=gnu++20 -D_GNU_SOURCE $(ADB_COMMON_FLAGS) -D_Nonnull= -D_Nullable= -fpermissive
 
-adb_LDFLAG := -L$(libusb_LIB) -l:libusb-1.0.a -ludev -L$(libopenssl_LIB) -l:libcrypto.a -ludev -lpthread -static-libgcc -static-libstdc++
+adb_LDFLAG := -Lexternal/libusb/libusb/.libs -l:libusb-1.0.a -ludev -lpthread -static-libgcc -static-libstdc++
 
 adb_OBJ_CXX := $(patsubst %.cpp,%.o, $(adb_SOURCES))
 
 $(adb_OBJ_CXX): %.o:%.cpp
 	$(CXX) -c $(adb_INC) $(adb_CXXFLAGS) $< -o $@
 
-$(adb_TARGET): $(OUT_DIR) $(adb_OBJ_CXX)
+$(adb_TARGET): $(adb_OBJ_CXX)
 	$(CXX) -o $@ $^ $(adb_CXXFLAGS) $(libadb_a_TARGET) $(libdepends_a_TARGET) $(adb_LDFLAG)
 
 clean:
