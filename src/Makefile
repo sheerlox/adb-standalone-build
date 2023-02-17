@@ -20,7 +20,7 @@ libadb_a_TARGET := $(OUT_DIR)/libadb.a
 adb_TARGET := $(OUT_DIR)/adb
 
 DEPENDS_INC := $(addprefix -I,$(wildcard depends/*/include))
-ADB_INC := -Iadb -Iadb/crypto -Iadb/proto $(addprefix -I,$(wildcard adb/*/include))
+ADB_INC := -Iadb -Iadb/crypto -Iadb/proto -Iadb/pairing_connection/include  -Iadb/tls/include $(addprefix -I,$(wildcard adb/*/include))
 EXTERNAL_INC := -Iexternal/protobuf/src -Iexternal/boringssl/include -Iexternal/libusb/include -Iexternal/lz4/lib -Iexternal/zstd/lib -Iexternal/mdnsresponder/mDNSShared
 
 ADB_COMMON_FLAGS := \
@@ -38,9 +38,6 @@ adb: $(libadb_a_TARGET) $(adb_TARGET)
 libdepends_a_INC := $(ADB_INC) $(DEPENDS_INC) $(EXTERNAL_INC)
 
 libdepends_a_SOURCES_CXX := \
-	adb/crypto/key.cpp \
-	adb/crypto/rsa_2048_key.cpp \
-	adb/crypto/x509_generator.cpp \
 	depends/base/chrono_utils.cpp \
 	depends/base/cmsg.cpp \
 	depends/base/file.cpp \
@@ -55,46 +52,37 @@ libdepends_a_SOURCES_CXX := \
 	depends/crypto_utils/android_pubkey.cpp \
 	depends/cutils/sockets.cpp
 
-libdepends_a_SOURCES_CC := \
-	adb/proto/adb_known_hosts.pb.cc \
-	adb/proto/app_processes.pb.cc \
-	adb/proto/key_type.pb.cc \
-	adb/proto/pairing.pb.cc
-
 libdepends_a_CXXFLAGS := -DADB_HOST=1 -DFAKE_LOG_DEVICE=1
 
 libdepends_a_OBJ_CXX := $(patsubst %.cpp,%.o, $(libdepends_a_SOURCES_CXX))
-libdepends_a_OBJ_CC := $(patsubst %.cc,%.o, $(libdepends_a_SOURCES_CC))
 
 $(libdepends_a_OBJ_CXX): %.o:%.cpp
 	$(CXX) -c $(libdepends_a_INC) $(libdepends_a_CXXFLAGS) $< -o $@
-$(libdepends_a_OBJ_CC): %.o:%.cc
-	$(CXX) -c $(libdepends_a_INC) $(libdepends_a_CXXFLAGS) $< -o $@
 
-$(libdepends_a_TARGET): $(libdepends_a_OBJ_CXX) $(libdepends_a_OBJ_CC)
-	ar rc $(libdepends_a_TARGET) $(libdepends_a_OBJ_CXX) $(libdepends_a_OBJ_CC)
+$(libdepends_a_TARGET): $(libdepends_a_OBJ_CXX)
+	ar rc $(libdepends_a_TARGET) $(libdepends_a_OBJ_CXX)
 
 ########################
 #       libadb         #
 ########################
 libadb_a_INC := -Iincludes $(DEPENDS_INC) $(ADB_INC) $(EXTERNAL_INC)
 
-bp_libadb_SOURCES := \
+libadb_a_SOURCES_CXX := \
 	adb/adb.cpp \
-  adb/adb_io.cpp \
-  adb/adb_listeners.cpp \
-  adb/adb_trace.cpp \
-  adb/adb_unique_fd.cpp \
-  adb/adb_utils.cpp \
-  adb/fdevent/fdevent.cpp \
-  adb/services.cpp \
-  adb/sockets.cpp \
-  adb/socket_spec.cpp \
-  adb/sysdeps/env.cpp \
-  adb/sysdeps/errno.cpp \
-  adb/transport.cpp \
-  adb/transport_fd.cpp \
-  adb/types.cpp \
+	adb/adb_io.cpp \
+	adb/adb_listeners.cpp \
+	adb/adb_trace.cpp \
+	adb/adb_unique_fd.cpp \
+	adb/adb_utils.cpp \
+	adb/fdevent/fdevent.cpp \
+	adb/services.cpp \
+	adb/sockets.cpp \
+	adb/socket_spec.cpp \
+	adb/sysdeps/env.cpp \
+	adb/sysdeps/errno.cpp \
+	adb/transport.cpp \
+	adb/transport_fd.cpp \
+	adb/types.cpp \
 	adb/client/auth.cpp \
 	adb/client/adb_wifi.cpp \
 	adb/client/usb_libusb.cpp \
@@ -103,25 +91,42 @@ bp_libadb_SOURCES := \
 	adb/client/transport_mdns.cpp \
 	adb/client/mdns_utils.cpp \
 	adb/client/transport_usb.cpp \
-	adb/client/pairing/pairing_client.cpp
+	adb/client/pairing/pairing_client.cpp \
+	adb/crypto/key.cpp \
+	adb/crypto/rsa_2048_key.cpp \
+	adb/crypto/x509_generator.cpp \
+	adb/pairing_connection/pairing_connection.cpp \
+	adb/tls/adb_ca_list.cpp \
+	adb/tls/tls_connection.cpp
 
-bp_libadb_linux_SOURCES := adb/fdevent/fdevent_epoll.cpp
+libadb_a_linux_SOURCES_CXX := \
+	adb/client/usb_linux.cpp \
+	adb/fdevent/fdevent_epoll.cpp
 
-bp_libadb_posix_SOURCES := \
+libadb_a_posix_SOURCES_CXX := \
   adb/sysdeps_unix.cpp \
   adb/sysdeps/posix/network.cpp
 
-libadb_a_SOURCES := $(bp_libadb_SOURCES) $(bp_libadb_linux_SOURCES) $(bp_libadb_posix_SOURCES)
+libadb_a_SOURCES_CXX := $(libadb_a_SOURCES_CXX) $(libadb_a_linux_SOURCES_CXX) $(libadb_a_posix_SOURCES_CXX)
+
+libadb_a_SOURCES_CC := \
+	adb/proto/adb_known_hosts.pb.cc \
+	adb/proto/app_processes.pb.cc \
+	adb/proto/key_type.pb.cc \
+	adb/proto/pairing.pb.cc
 
 libadb_a_CXXFLAGS := $(ADB_COMMON_FLAGS)
 
-libadb_a_OBJ_CXX := $(patsubst %.cpp,%.o, $(libadb_a_SOURCES))
+libadb_a_OBJ_CXX := $(patsubst %.cpp,%.o, $(libadb_a_SOURCES_CXX))
+libadb_a_OBJ_CC := $(patsubst %.cc,%.o, $(libadb_a_SOURCES_CC))
 
 $(libadb_a_OBJ_CXX): %.o:%.cpp
 	$(CXX) -c $(libadb_a_INC) $(libadb_a_CXXFLAGS) $< -o $@
+$(libadb_a_OBJ_CC): %.o:%.cc
+	$(CXX) -c $(libadb_a_INC) $(libadb_a_CXXFLAGS) $< -o $@
 
-$(libadb_a_TARGET): $(libadb_a_OBJ_CXX)
-	ar rc $(libadb_a_TARGET) $(libadb_a_OBJ_CXX)
+$(libadb_a_TARGET): $(libadb_a_OBJ_CXX) $(libadb_a_OBJ_CC)
+	ar rc $(libadb_a_TARGET) $(libadb_a_OBJ_CXX) $(libadb_a_OBJ_CC)
 
 ########################
 #         adb          #

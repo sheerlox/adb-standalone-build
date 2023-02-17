@@ -9,10 +9,9 @@ There will be multiple entries to remove from that result (e.g. `android-base/en
 
 ### libadb
 
-In `src/adb/Android.bp`, find `libadbd_core` library declaration (look at the `srcs` property).
-Then update all `bp_libadb*_SOURCES` variables in `src/Makefile`.
-
-*Note: don't account for the `daemon/*` files as they are destined to the Android devices.*
+In `src/adb/Android.bp`, find `libadb_host` library declaration (look at the `srcs` property).
+Then update all `libadb*_SOURCES` variables in `src/Makefile`.
+Also include the source files from every `libadb_*` depedency in the `static_libs` property. You can find those in the respective `Android.bp` files (e.g. `libadb_crypto` in `adb/crypto/Android.bp`).
 
 ### adb
 
