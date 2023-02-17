@@ -43,7 +43,8 @@ all: all_download_source all_patch_source all_download_headers all_download_exte
 #   DOWNLOAD SOURCE    #
 ########################
 all_download_source: download_adb_source download_androidfw_source download_libbase_source download_libcutils_source download_libcrypto_utils_source \
-	download_libutils_source download_liblog_source download_libbuildversion_source download_libziparchive_source download_incfs_util_source download_diagnose_usb_source
+	download_libutils_source download_liblog_source download_libbuildversion_source download_libziparchive_source download_incfs_util_source \
+	download_diagnose_usb_source download_mdnssd_source
 
 download_adb_source: $(SOURCE_DIR)/adb
 $(SOURCE_DIR)/adb:
@@ -108,6 +109,11 @@ download_diagnose_usb_source: $(DEPENDS_DIR)/diagnose_usb
 $(DEPENDS_DIR)/diagnose_usb:
 	@echo "Downloading diagnose_usb source ..."
 	@bash utils/git_sparse.sh https://android.googlesource.com/platform/system/core $(PLATFORM_TOOLS_REF) diagnose_usb $(DEPENDS_DIR)/diagnose_usb $(SUPPRESS_OUTPUT)
+
+download_mdnssd_source: $(DEPENDS_DIR)/mdnssd
+$(DEPENDS_DIR)/mdnssd:
+	@echo "Downloading mdnssd source ..."
+	@bash utils/git_sparse.sh https://android.googlesource.com/platform/external/mdnsresponder $(PLATFORM_TOOLS_REF) mDNSShared $(DEPENDS_DIR)/mdnssd $(SUPPRESS_OUTPUT)
 
 ########################
 #     PATCH SOURCE     #
@@ -194,7 +200,7 @@ $(SOURCE_DIR)/adb/deployagentscript.inc:
 #  DOWNLOAD EXTERNAL   #
 ########################
 all_download_external: download_zlib_external download_protobuf_external download_boringssl_external download_libusb_external	download_lz4_external \
-	download_zstd_external download_mdnsresponder_external
+	download_zstd_external
 
 download_zlib_external: $(EXTERNAL_DIR)/zlib
 $(EXTERNAL_DIR)/zlib:
@@ -228,11 +234,6 @@ $(EXTERNAL_DIR)/zstd:
 	@echo "Downloading zstd source ..."
 	@git clone https://github.com/facebook/zstd --single-branch --branch v$$(./utils/get_zstd_version.sh $(PLATFORM_TOOLS_VERSION)) $(EXTERNAL_DIR)/zstd $(SUPPRESS_OUTPUT)
 	@rm -rf $(EXTERNAL_DIR)/zstd/.git
-
-download_mdnsresponder_external: $(EXTERNAL_DIR)/mdnsresponder
-$(EXTERNAL_DIR)/mdnsresponder:
-	@echo "Downloading mdnsresponder source ..."
-	@git clone https://android.googlesource.com/platform/external/mdnsresponder --single-branch --branch $(PLATFORM_TOOLS_REF) $(EXTERNAL_DIR)/mdnsresponder/ $(SUPPRESS_OUTPUT)
 
 ########################
 #        BUILD         #

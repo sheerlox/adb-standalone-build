@@ -20,9 +20,9 @@ libadb_a_TARGET := $(OUT_DIR)/libadb.a
 libmdnssd_a_TARGET := $(OUT_DIR)/libmsdbssd.a
 adb_TARGET := $(OUT_DIR)/adb
 
-DEPENDS_INC := -Idepends/libziparchive/incfs_support/include $(addprefix -I,$(wildcard depends/*/include))
+DEPENDS_INC := -Idepends/libziparchive/incfs_support/include -Idepends/mdnssd $(addprefix -I,$(wildcard depends/*/include))
 ADB_INC := -Iadb -Iadb/crypto -Iadb/proto -Iadb/fastdeploy/proto -Iadb/pairing_connection/include -Iadb/tls/include $(addprefix -I,$(wildcard adb/*/include))
-EXTERNAL_INC := -Iexternal/protobuf/src -Iexternal/boringssl/include -Iexternal/libusb/include -Iexternal/lz4/lib -Iexternal/zstd/lib -Iexternal/zlib -Iexternal/mdnsresponder/mDNSShared
+EXTERNAL_INC := -Iexternal/protobuf/src -Iexternal/boringssl/include -Iexternal/libusb/include -Iexternal/lz4/lib -Iexternal/zstd/lib -Iexternal/zlib
 
 ADB_COMMON_FLAGS := \
 	-DADB_HOST=1 \
@@ -121,13 +121,12 @@ libmdnssd_a_CFLAGS := \
 	-Wno-array-bounds \
 	-Wno-pointer-sign \
 	-Wno-unused \
-	-Wno-unused-const-variable \
+	-Wno-unused-but-set-variable \
 	-Wno-unused-parameter \
 	-Werror=implicit-function-declaration \
 	-DTARGET_OS_LINUX \
 	-DHAVE_LINUX \
-	-DUSES_NETLINK \
-	-DADB_HOST=1
+	-DUSES_NETLINK
 
 libmdnssd_a_OBJ_C := $(patsubst %.c,%.o, $(libmdnssd_a_SOURCES_C))
 $(libmdnssd_a_OBJ_C): %.o:%.c
