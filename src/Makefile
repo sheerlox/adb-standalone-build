@@ -167,7 +167,7 @@ adb_SOURCES := \
 
 adb_CXXFLAGS :=	-std=gnu++20 -D_GNU_SOURCE $(ADB_COMMON_FLAGS) -D_Nonnull= -D_Nullable= -fpermissive
 
-adb_LDFLAG := -Lexternal/libusb/libusb/.libs -l:libusb-1.0.a -ludev -lpthread -static-libgcc -static-libstdc++
+adb_LDFLAG := external/protobuf/libprotobuf.a external/boringssl/build/ssl/libssl.a external/boringssl/build/crypto/libcrypto.a external/zlib/libz.a external/lz4/lib/liblz4.a external/zstd/lib/libzstd.a -Lexternal/libusb/libusb/.libs -l:libusb-1.0.a -ludev -lpthread -static-libgcc -static-libstdc++
 
 adb_OBJ_CXX := $(patsubst %.cpp,%.o, $(adb_SOURCES))
 
@@ -175,7 +175,7 @@ $(adb_OBJ_CXX): %.o:%.cpp
 	$(CXX) -c $(adb_INC) $(adb_CXXFLAGS) $< -o $@
 
 $(adb_TARGET): $(adb_OBJ_CXX)
-	$(CXX) -o $@ $^ $(adb_CXXFLAGS) $(libadb_a_TARGET) $(libdepends_a_TARGET) external/protobuf/libprotobuf.a external/boringssl/build/ssl/libssl.a external/boringssl/build/crypto/libcrypto.a $(adb_LDFLAG)
+	$(CXX) -o $@ $^ $(adb_CXXFLAGS) $(libadb_a_TARGET) $(libdepends_a_TARGET) $(adb_LDFLAG)
 
 clean:
 	rm -rf $(libdepends_a_OBJ_CXX) $(libdepends_a_OBJ_C) $(libadb_a_OBJ_CXX) $(libadb_a_OBJ_CXX) $(adb_OBJ_CXX) $(OUT_DIR)

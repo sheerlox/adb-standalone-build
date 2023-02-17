@@ -231,10 +231,10 @@ $(EXTERNAL_DIR)/mdnsresponder:
 ########################
 #        BUILD         #
 ########################
-all_build: build_zlib_external build_protobuf_external build_libusb_external build_boringssl_external
+all_build: build_zlib_external build_protobuf_external build_libusb_external build_boringssl_external build_liblz4_external build_libzstd_external
 
-build_zlib_external: download_zlib_external $(EXTERNAL_DIR)/zlib/libz.so
-$(EXTERNAL_DIR)/zlib/libz.so:
+build_zlib_external: download_zlib_external $(EXTERNAL_DIR)/zlib/libz.a
+$(EXTERNAL_DIR)/zlib/libz.a:
 	@echo "Building zlib ..."
 	@cd $(EXTERNAL_DIR)/zlib; \
 		./configure $(SUPPRESS_OUTPUT); \
@@ -244,7 +244,7 @@ build_protobuf_external: download_protobuf_external build_zlib_external $(EXTERN
 $(EXTERNAL_DIR)/protobuf/protoc:
 	@echo "Building protobuf ..."
 	@cd $(EXTERNAL_DIR)/protobuf; \
-		cmake ./cmake -DZLIB_LIBRARY=$(EXTERNAL_DIR)/zlib/libz.a -DZLIB_INCLUDE_DIR=$(EXTERNAL_DIR)/zlib/ $(SUPPRESS_OUTPUT); \
+		cmake ./cmake -DCMAKE_CXX_STANDARD=20 -DZLIB_LIBRARY=$(EXTERNAL_DIR)/zlib/libz.a -DZLIB_INCLUDE_DIR=$(EXTERNAL_DIR)/zlib/ $(SUPPRESS_OUTPUT); \
 		cmake --build . -j$(NPROCS) $(SUPPRESS_OUTPUT); \
 		echo "Testing protobuf build ..."; \
 		cmake --build . --target check $(SUPPRESS_OUTPUT)
@@ -271,6 +271,18 @@ $(EXTERNAL_DIR)/boringssl/build/ssl/libssl.a:
 		go run util/all_tests.go $(SUPPRESS_OUTPUT); \
 		cd ssl/test/runner; \
 		go test $(SUPPRESS_OUTPUT)
+
+build_liblz4_external: download_lz4_external $(EXTERNAL_DIR)/lz4/lib/liblz4.a
+$(EXTERNAL_DIR)/lz4/lib/liblz4.a:
+	@echo "Building lz4 ..."
+	@cd $(EXTERNAL_DIR)/lz4; \
+		make $(SUPPRESS_OUTPUT)
+
+build_libzstd_external: download_zstd_external $(EXTERNAL_DIR)/zstd/lib/libzstd.a
+$(EXTERNAL_DIR)/zstd/lib/libzstd.a:
+	@echo "Building libzstd ..."
+	@cd $(EXTERNAL_DIR)/zstd; \
+		make lib $(SUPPRESS_OUTPUT)
 
 ########################
 #       COMPILE        #
