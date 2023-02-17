@@ -5,6 +5,9 @@
 # Stamps folder
 .stamps
 
+# Logs
+*.log
+
 # Output directory
 /out/
 

@@ -18,6 +18,6 @@ fi
 
 git clone https://android.googlesource.com/platform/external/protobuf --single-branch --branch $PLATFORM_TOOLS_REF --depth 1 $TMP_DIR >/dev/null 2>&1
 
-awk -F',' '/AC_INIT\(\[Protocol Buffers\],/ { gsub("(\\[|\\])",""); print $2; }' $TMP_DIR/configure.ac
+awk -F',' '/AC_INIT\(\[Protocol Buffers\],/ { gsub(/(\[|\])/,""); print $2; }' $TMP_DIR/configure.ac
 
 rm -rf $TMP_DIR

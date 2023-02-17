@@ -12,7 +12,7 @@ EXTERNAL_DIR := $(SOURCE_DIR)/external
 NPROCS := $(shell grep -c ^processor /proc/cpuinfo)
 
 # comment out the following line to get full commands output
-SUPPRESS_OUTPUT := >/dev/null 2>&1
+SUPPRESS_OUTPUT := >/dev/null 2>error.log
 
 # create working directories if they don't exist
 ifneq ($(STAMPS_DIR), $(wildcard $(STAMPS_DIR)))
