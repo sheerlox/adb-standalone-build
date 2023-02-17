@@ -43,7 +43,7 @@ all: all_download_source all_patch_source all_download_headers all_download_exte
 #   DOWNLOAD SOURCE    #
 ########################
 all_download_source: download_adb_source download_androidfw_source download_libbase_source download_libcutils_source download_libcrypto_utils_source \
-	download_libutils_source download_liblog_source download_libbuildversion_source download_incfs_util_source download_diagnose_usb_source
+	download_libutils_source download_liblog_source download_libbuildversion_source download_libziparchive_source download_incfs_util_source download_diagnose_usb_source
 
 download_adb_source: $(SOURCE_DIR)/adb
 $(SOURCE_DIR)/adb:
@@ -86,6 +86,19 @@ $(DEPENDS_DIR)/buildversion:
 	@echo "Downloading libbuildversion source ..."
 	@bash utils/git_sparse.sh https://android.googlesource.com/platform/build/soong $(PLATFORM_TOOLS_REF) cc/libbuildversion/ $(DEPENDS_DIR)/buildversion/ $(SUPPRESS_OUTPUT)
 
+download_libziparchive_source: $(DEPENDS_DIR)/libziparchive
+$(DEPENDS_DIR)/libziparchive:
+	@echo "Downloading libziparchive source ..."
+# fix depends/libziparchive/...: error: calling a private constructor of class '...' errors
+# if $PLATFORM_TOOLS_VERSION < 32.0.0
+	@if [ $(shell ./utils/semver.sh compare $(PLATFORM_TOOLS_VERSION) 32.0.0) -eq -1 ]; \
+		then \
+			git clone https://android.googlesource.com/platform/system/libziparchive --single-branch --branch platform-tools-32.0.0 $(DEPENDS_DIR)/libziparchive $(SUPPRESS_OUTPUT); \
+		else \
+			git clone https://android.googlesource.com/platform/system/libziparchive --single-branch --branch $(PLATFORM_TOOLS_REF) $(DEPENDS_DIR)/libziparchive $(SUPPRESS_OUTPUT); \
+		fi
+	@rm -rf $(DEPENDS_DIR)/libziparchive/.git
+
 download_incfs_util_source: $(DEPENDS_DIR)/incfs_util
 $(DEPENDS_DIR)/incfs_util:
 	@echo "Downloading incfs_util source ..."
@@ -125,7 +138,7 @@ $(STAMPS_DIR)/patch_incfs_util_source:
 #   DOWNLOAD HEADERS   #
 ########################
 all_download_headers: download_android_headers download_adbd_auth_headers download_brotli_headers \
-	download_fmtlib_headers download_system_headers download_ziparchive_headers download_gtest_headers \
+	download_fmtlib_headers download_system_headers download_gtest_headers \
 	generate_pt_version_header generate_deployagent_includes
 
 download_android_headers: $(INCLUDES_DIR)/android
@@ -153,11 +166,6 @@ download_system_headers: $(INCLUDES_DIR)/system
 $(INCLUDES_DIR)/system:
 	@echo "Downloading system headers ..."
 	@bash utils/git_sparse.sh https://android.googlesource.com/platform/system/core $(PLATFORM_TOOLS_REF) libsystem/include/system/ $(INCLUDES_DIR)/system/ $(SUPPRESS_OUTPUT)
-
-download_ziparchive_headers: $(INCLUDES_DIR)/ziparchive
-$(INCLUDES_DIR)/ziparchive:
-	@echo "Downloading ziparchive headers ..."
-	@bash utils/git_sparse.sh https://android.googlesource.com/platform/system/libziparchive $(PLATFORM_TOOLS_REF) include/ziparchive/ $(INCLUDES_DIR)/ziparchive/ $(SUPPRESS_OUTPUT)
 
 download_gtest_headers: $(INCLUDES_DIR)/gtest
 $(INCLUDES_DIR)/gtest:
