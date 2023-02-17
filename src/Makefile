@@ -21,7 +21,7 @@ adb_TARGET := $(OUT_DIR)/adb
 
 DEPENDS_INC := $(addprefix -I,$(wildcard depends/*/include))
 ADB_INC := -Iadb -Iadb/crypto -Iadb/proto -Iadb/fastdeploy/proto -Iadb/pairing_connection/include -Iadb/tls/include $(addprefix -I,$(wildcard adb/*/include))
-EXTERNAL_INC := -Iexternal/protobuf/src -Iexternal/boringssl/include -Iexternal/libusb/include -Iexternal/lz4/lib -Iexternal/zstd/lib -Iexternal/mdnsresponder/mDNSShared
+EXTERNAL_INC := -Iexternal/protobuf/src -Iexternal/boringssl/include -Iexternal/libusb/include -Iexternal/lz4/lib -Iexternal/zstd/lib -Iexternal/zlib -Iexternal/mdnsresponder/mDNSShared
 
 ADB_COMMON_FLAGS := \
 	-DADB_HOST=1 \
@@ -35,7 +35,7 @@ adb: $(libadb_a_TARGET) $(adb_TARGET)
 ########################
 #     libdepends       #
 ########################
-libdepends_a_INC := $(ADB_INC) $(DEPENDS_INC) $(EXTERNAL_INC)
+libdepends_a_INC := -Iincludes $(ADB_INC) $(DEPENDS_INC) $(EXTERNAL_INC)
 
 libdepends_a_SOURCES_CXX := \
 	depends/base/chrono_utils.cpp \
@@ -50,7 +50,18 @@ libdepends_a_SOURCES_CXX := \
 	depends/base/strings.cpp \
 	depends/base/threads.cpp \
 	depends/crypto_utils/android_pubkey.cpp \
-	depends/cutils/sockets.cpp
+	depends/cutils/sockets.cpp \
+	depends/androidfw/ZipFileRO.cpp \
+	depends/androidfw/ResourceTypes.cpp \
+	depends/utils/String8.cpp \
+	depends/utils/String16.cpp \
+	depends/utils/Unicode.cpp \
+	depends/utils/SharedBuffer.cpp \
+	depends/log/log_event_list.cpp \
+	depends/log/log_event_write.cpp \
+	depends/log/logger_write.cpp \
+	depends/log/properties.cpp \
+	depends/incfs_util/map_ptr.cpp \
 
 libdepends_a_CXXFLAGS := -DADB_HOST=1 -DFAKE_LOG_DEVICE=1
 

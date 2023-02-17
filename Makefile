@@ -42,13 +42,18 @@ all: all_download_source all_patch_source all_download_headers all_download_exte
 ########################
 #   DOWNLOAD SOURCE    #
 ########################
-all_download_source: download_adb_source download_libbase_source download_libcutils_source download_libcrypto_utils_source download_diagnose_usb_source \
-	download_libutils_source download_liblog_source
+all_download_source: download_adb_source download_androidfw_source download_libbase_source download_libcutils_source download_libcrypto_utils_source \
+	download_libutils_source download_liblog_source download_incfs_util_source download_diagnose_usb_source
 
 download_adb_source: $(SOURCE_DIR)/adb
 $(SOURCE_DIR)/adb:
 	@echo "Downloading adb source ..."
 	@git clone https://android.googlesource.com/platform/packages/modules/adb --branch $(PLATFORM_TOOLS_REF) $(SOURCE_DIR)/adb $(SUPPRESS_OUTPUT)
+
+download_androidfw_source: $(DEPENDS_DIR)/androidfw
+$(DEPENDS_DIR)/androidfw:
+	@echo "Downloading androidfw source ..."
+	@bash utils/git_sparse.sh https://android.googlesource.com/platform/frameworks/base $(PLATFORM_TOOLS_REF) libs/androidfw/ $(DEPENDS_DIR)/androidfw/ $(SUPPRESS_OUTPUT)
 
 download_libbase_source: $(DEPENDS_DIR)/base
 $(DEPENDS_DIR)/base:
@@ -76,6 +81,11 @@ $(DEPENDS_DIR)/log:
 	@echo "Downloading liblog source ..."
 	@bash utils/git_sparse.sh https://android.googlesource.com/platform/system/logging $(PLATFORM_TOOLS_REF) liblog $(DEPENDS_DIR)/log $(SUPPRESS_OUTPUT)
 
+download_incfs_util_source: $(DEPENDS_DIR)/incfs_util
+$(DEPENDS_DIR)/incfs_util:
+	@echo "Downloading incfs_util source ..."
+	@bash utils/git_sparse.sh https://android.googlesource.com/platform/system/incremental_delivery $(PLATFORM_TOOLS_REF) incfs/util $(DEPENDS_DIR)/incfs_util/ $(SUPPRESS_OUTPUT)
+
 download_diagnose_usb_source: $(DEPENDS_DIR)/diagnose_usb
 $(DEPENDS_DIR)/diagnose_usb:
 	@echo "Downloading diagnose_usb source ..."
@@ -84,23 +94,33 @@ $(DEPENDS_DIR)/diagnose_usb:
 ########################
 #     PATCH SOURCE     #
 ########################
-all_patch_source: patch_adb_source
+all_patch_source: patch_adb_source patch_incfs_util_source
 
 patch_adb_source: $(STAMPS_DIR)/patch_adb_source
 $(STAMPS_DIR)/patch_adb_source:
 	@echo "Patching adb source ..."
 # if 31.0.0 >= $PLATFORM_TOOLS_VERSION < 34.0.0
-	@if [ $(shell ./utils/semver.sh compare $(PLATFORM_TOOLS_VERSION) 34.0.0) -eq -1 ] && [ $(shell ./utils/semver.sh compare 31.0.0 $(PLATFORM_TOOLS_VERSION)) -le 0 ]; \
+	@if [ $(shell ./utils/semver.sh compare 31.0.0 $(PLATFORM_TOOLS_VERSION)) -le 0 ] && [ $(shell ./utils/semver.sh compare $(PLATFORM_TOOLS_VERSION) 34.0.0) -eq -1 ]; \
 		then \
 			sed -i '/^namespace adb.*/i #include <string.h>\n' $(SOURCE_DIR)/adb/crypto/x509_generator.cpp; \
 		fi
 	@touch $(STAMPS_DIR)/patch_adb_source
 
+patch_incfs_util_source: $(STAMPS_DIR)/patch_incfs_util_source
+$(STAMPS_DIR)/patch_incfs_util_source:
+	@echo "Patching incfs_util source ..."
+# if 30.0.5 >= $PLATFORM_TOOLS_VERSION < 32.0.0
+	@if [ $(shell ./utils/semver.sh compare 30.0.5 $(PLATFORM_TOOLS_VERSION)) -le 0 ] && [ $(shell ./utils/semver.sh compare $(PLATFORM_TOOLS_VERSION) 32.0.0) -eq -1 ]; \
+		then \
+			sed -i '/^#include <vector>/i #include <atomic>' $(DEPENDS_DIR)/incfs_util/include/util/map_ptr.h; \
+		fi
+	@touch $(STAMPS_DIR)/patch_incfs_util_source
+
 ########################
 #   DOWNLOAD HEADERS   #
 ########################
-all_download_headers: download_android_headers download_build_headers download_adbd_auth_headers download_brotli_headers download_androidfw_headers \
-	download_incfs_util_headers download_fmtlib_headers download_system_headers download_ziparchive_headers download_gtest_headers \
+all_download_headers: download_android_headers download_build_headers download_adbd_auth_headers download_brotli_headers \
+	download_fmtlib_headers download_system_headers download_ziparchive_headers download_gtest_headers \
 	generate_pt_version_header generate_deployagent_includes
 
 download_android_headers: $(INCLUDES_DIR)/android
@@ -123,16 +143,6 @@ download_brotli_headers: $(INCLUDES_DIR)/brotli
 $(INCLUDES_DIR)/brotli:
 	@echo "Downloading brotli headers ..."
 	@bash utils/git_sparse.sh https://android.googlesource.com/platform/external/brotli $(PLATFORM_TOOLS_REF) c/include/brotli/ $(INCLUDES_DIR)/brotli/ $(SUPPRESS_OUTPUT)
-
-download_androidfw_headers: $(INCLUDES_DIR)/androidfw
-$(INCLUDES_DIR)/androidfw:
-	@echo "Downloading androidfw headers ..."
-	@bash utils/git_sparse.sh https://android.googlesource.com/platform/frameworks/base $(PLATFORM_TOOLS_REF) libs/androidfw/include/androidfw/ $(INCLUDES_DIR)/androidfw/ $(SUPPRESS_OUTPUT)
-
-download_incfs_util_headers: $(INCLUDES_DIR)/util
-$(INCLUDES_DIR)/util:
-	@echo "Downloading incremental delivery util headers ..."
-	@bash utils/git_sparse.sh https://android.googlesource.com/platform/system/incremental_delivery $(PLATFORM_TOOLS_REF) incfs/util/include/util/ $(INCLUDES_DIR)/util/ $(SUPPRESS_OUTPUT)
 
 download_fmtlib_headers: $(INCLUDES_DIR)/fmt
 $(INCLUDES_DIR)/fmt:
