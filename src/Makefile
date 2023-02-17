@@ -19,7 +19,7 @@ libdepends_a_TARGET := $(OUT_DIR)/libdepends.a
 libadb_a_TARGET := $(OUT_DIR)/libadb.a
 adb_TARGET := $(OUT_DIR)/adb
 
-DEPENDS_INC := $(addprefix -I,$(wildcard depends/*/include))
+DEPENDS_INC := -Idepends/libziparchive/incfs_support/include $(addprefix -I,$(wildcard depends/*/include))
 ADB_INC := -Iadb -Iadb/crypto -Iadb/proto -Iadb/fastdeploy/proto -Iadb/pairing_connection/include -Iadb/tls/include $(addprefix -I,$(wildcard adb/*/include))
 EXTERNAL_INC := -Iexternal/protobuf/src -Iexternal/boringssl/include -Iexternal/libusb/include -Iexternal/lz4/lib -Iexternal/zstd/lib -Iexternal/zlib -Iexternal/mdnsresponder/mDNSShared
 
@@ -53,26 +53,43 @@ libdepends_a_SOURCES_CXX := \
 	depends/cutils/sockets.cpp \
 	depends/androidfw/ZipFileRO.cpp \
 	depends/androidfw/ResourceTypes.cpp \
+	depends/androidfw/LocaleData.cpp \
+	depends/androidfw/TypeWrappers.cpp \
 	depends/utils/String8.cpp \
 	depends/utils/String16.cpp \
 	depends/utils/Unicode.cpp \
 	depends/utils/SharedBuffer.cpp \
+	depends/utils/FileMap.cpp \
+	depends/utils/VectorImpl.cpp \
 	depends/log/log_event_list.cpp \
 	depends/log/log_event_write.cpp \
 	depends/log/logger_write.cpp \
 	depends/log/properties.cpp \
 	depends/incfs_util/map_ptr.cpp \
 	depends/buildversion/libbuildversion.cpp \
+	depends/libziparchive/zip_error.cpp \
+	depends/diagnose_usb/diagnose_usb.cpp \
+	depends/cutils/socket_local_server_unix.cpp \
+	depends/cutils/socket_local_client_unix.cpp \
+	depends/cutils/socket_network_client_unix.cpp \
+	depends/cutils/socket_inaddr_any_server_unix.cpp \
+
+libdepends_a_SOURCES_CC := \
+	depends/libziparchive/zip_archive.cc \
+	depends/libziparchive/zip_cd_entry_map.cc \
 
 libdepends_a_CXXFLAGS := -DADB_HOST=1 -DFAKE_LOG_DEVICE=1
 
 libdepends_a_OBJ_CXX := $(patsubst %.cpp,%.o, $(libdepends_a_SOURCES_CXX))
+libdepends_a_OBJ_CC := $(patsubst %.cc,%.o, $(libdepends_a_SOURCES_CC))
 
 $(libdepends_a_OBJ_CXX): %.o:%.cpp
 	$(CXX) -c $(libdepends_a_INC) $(libdepends_a_CXXFLAGS) $< -o $@
+$(libdepends_a_OBJ_CC): %.o:%.cc
+	$(CXX) -c $(libdepends_a_INC) $(libdepends_a_CXXFLAGS) $< -o $@
 
-$(libdepends_a_TARGET): $(libdepends_a_OBJ_CXX)
-	ar rc $(libdepends_a_TARGET) $(libdepends_a_OBJ_CXX)
+$(libdepends_a_TARGET): $(libdepends_a_OBJ_CXX) $(libdepends_a_OBJ_CC)
+	ar rc $(libdepends_a_TARGET) $(libdepends_a_OBJ_CXX) $(libdepends_a_OBJ_CC)
 
 ########################
 #       libadb         #
@@ -107,6 +124,8 @@ libadb_a_SOURCES_CXX := \
 	adb/crypto/key.cpp \
 	adb/crypto/rsa_2048_key.cpp \
 	adb/crypto/x509_generator.cpp \
+	adb/pairing_auth/pairing_auth.cpp \
+	adb/pairing_auth/aes_128_gcm.cpp \
 	adb/pairing_connection/pairing_connection.cpp \
 	adb/tls/adb_ca_list.cpp \
 	adb/tls/tls_connection.cpp \
