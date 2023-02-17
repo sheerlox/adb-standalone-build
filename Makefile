@@ -91,7 +91,7 @@ $(DEPENDS_DIR)/libziparchive:
 	@echo "Downloading libziparchive source ..."
 # fix depends/libziparchive/...: error: calling a private constructor of class '...' errors
 # if $PLATFORM_TOOLS_VERSION < 32.0.0
-	@if [ $(shell ./utils/semver.sh compare $(PLATFORM_TOOLS_VERSION) 32.0.0) -eq -1 ]; \
+	@if [ $$(./utils/semver.sh compare $(PLATFORM_TOOLS_VERSION) 32.0.0) -eq -1 ]; \
 		then \
 			git clone https://android.googlesource.com/platform/system/libziparchive --single-branch --branch platform-tools-32.0.0 $(DEPENDS_DIR)/libziparchive $(SUPPRESS_OUTPUT); \
 		else \
@@ -118,9 +118,15 @@ patch_adb_source: $(STAMPS_DIR)/patch_adb_source
 $(STAMPS_DIR)/patch_adb_source:
 	@echo "Patching adb source ..."
 # if 31.0.0 >= $PLATFORM_TOOLS_VERSION < 34.0.0
-	@if [ $(shell ./utils/semver.sh compare 31.0.0 $(PLATFORM_TOOLS_VERSION)) -le 0 ] && [ $(shell ./utils/semver.sh compare $(PLATFORM_TOOLS_VERSION) 34.0.0) -eq -1 ]; \
+	@if [ $$(./utils/semver.sh compare 31.0.0 $(PLATFORM_TOOLS_VERSION)) -le 0 ] && [ $$(./utils/semver.sh compare $(PLATFORM_TOOLS_VERSION) 34.0.0) -eq -1 ]; \
 		then \
-			sed -i '/^namespace adb.*/i #include <string.h>\n' $(SOURCE_DIR)/adb/crypto/x509_generator.cpp; \
+			sed -i '/^namespace adb {/i #include <string.h>\n' $(SOURCE_DIR)/adb/crypto/x509_generator.cpp; \
+		fi
+# if 31.0.0 >= $PLATFORM_TOOLS_VERSION < 33.0.4
+	@if [ $$(./utils/semver.sh compare 31.0.0 $(PLATFORM_TOOLS_VERSION)) -le 0 ] && [ $$(./utils/semver.sh compare $(PLATFORM_TOOLS_VERSION) 33.0.4) -eq -1 ]; \
+		then \
+			sed -i '/^using namespace adb::pairing;/i #include <string.h>\n' $(SOURCE_DIR)/adb/pairing_auth/pairing_auth.cpp; \
+			sed -i '/^namespace adb {/i #include <string.h>\n' $(SOURCE_DIR)/adb/pairing_auth/aes_128_gcm.cpp; \
 		fi
 	@touch $(STAMPS_DIR)/patch_adb_source
 
@@ -128,7 +134,7 @@ patch_incfs_util_source: $(STAMPS_DIR)/patch_incfs_util_source
 $(STAMPS_DIR)/patch_incfs_util_source:
 	@echo "Patching incfs_util source ..."
 # if 30.0.5 >= $PLATFORM_TOOLS_VERSION < 32.0.0
-	@if [ $(shell ./utils/semver.sh compare 30.0.5 $(PLATFORM_TOOLS_VERSION)) -le 0 ] && [ $(shell ./utils/semver.sh compare $(PLATFORM_TOOLS_VERSION) 32.0.0) -eq -1 ]; \
+	@if [ $$(./utils/semver.sh compare 30.0.5 $(PLATFORM_TOOLS_VERSION)) -le 0 ] && [ $$(./utils/semver.sh compare $(PLATFORM_TOOLS_VERSION) 32.0.0) -eq -1 ]; \
 		then \
 			sed -i '/^#include <vector>/i #include <atomic>' $(DEPENDS_DIR)/incfs_util/include/util/map_ptr.h; \
 		fi
