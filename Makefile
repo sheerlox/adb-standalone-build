@@ -43,7 +43,7 @@ all: all_download_source all_patch_source all_download_headers all_download_exte
 #   DOWNLOAD SOURCE    #
 ########################
 all_download_source: download_adb_source download_androidfw_source download_libbase_source download_libcutils_source download_libcrypto_utils_source \
-	download_libutils_source download_liblog_source download_incfs_util_source download_diagnose_usb_source
+	download_libutils_source download_liblog_source download_libbuildversion_source download_incfs_util_source download_diagnose_usb_source
 
 download_adb_source: $(SOURCE_DIR)/adb
 $(SOURCE_DIR)/adb:
@@ -80,6 +80,11 @@ download_liblog_source: $(DEPENDS_DIR)/log
 $(DEPENDS_DIR)/log:
 	@echo "Downloading liblog source ..."
 	@bash utils/git_sparse.sh https://android.googlesource.com/platform/system/logging $(PLATFORM_TOOLS_REF) liblog $(DEPENDS_DIR)/log $(SUPPRESS_OUTPUT)
+
+download_libbuildversion_source: $(DEPENDS_DIR)/buildversion
+$(DEPENDS_DIR)/buildversion:
+	@echo "Downloading libbuildversion source ..."
+	@bash utils/git_sparse.sh https://android.googlesource.com/platform/build/soong $(PLATFORM_TOOLS_REF) cc/libbuildversion/ $(DEPENDS_DIR)/buildversion/ $(SUPPRESS_OUTPUT)
 
 download_incfs_util_source: $(DEPENDS_DIR)/incfs_util
 $(DEPENDS_DIR)/incfs_util:
@@ -119,7 +124,7 @@ $(STAMPS_DIR)/patch_incfs_util_source:
 ########################
 #   DOWNLOAD HEADERS   #
 ########################
-all_download_headers: download_android_headers download_build_headers download_adbd_auth_headers download_brotli_headers \
+all_download_headers: download_android_headers download_adbd_auth_headers download_brotli_headers \
 	download_fmtlib_headers download_system_headers download_ziparchive_headers download_gtest_headers \
 	generate_pt_version_header generate_deployagent_includes
 
@@ -128,11 +133,6 @@ $(INCLUDES_DIR)/android:
 	@echo "Downloading android headers ..."
 	@bash utils/git_sparse.sh https://android.googlesource.com/platform/system/logging $(PLATFORM_TOOLS_REF) liblog/include/android/ $(INCLUDES_DIR)/android/ $(SUPPRESS_OUTPUT)
 	@bash utils/git_sparse.sh https://android.googlesource.com/platform/frameworks/native $(PLATFORM_TOOLS_REF) include/android/* $(INCLUDES_DIR)/android/ $(SUPPRESS_OUTPUT)
-
-download_build_headers: $(INCLUDES_DIR)/build
-$(INCLUDES_DIR)/build:
-	@echo "Downloading build headers ..."
-	@bash utils/git_sparse.sh https://android.googlesource.com/platform/build/soong $(PLATFORM_TOOLS_REF) cc/libbuildversion/include/build/ $(INCLUDES_DIR)/build/ $(SUPPRESS_OUTPUT)
 
 download_adbd_auth_headers: $(INCLUDES_DIR)/adbd_auth.h
 $(INCLUDES_DIR)/adbd_auth.h:

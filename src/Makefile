@@ -62,6 +62,7 @@ libdepends_a_SOURCES_CXX := \
 	depends/log/logger_write.cpp \
 	depends/log/properties.cpp \
 	depends/incfs_util/map_ptr.cpp \
+	depends/buildversion/libbuildversion.cpp \
 
 libdepends_a_CXXFLAGS := -DADB_HOST=1 -DFAKE_LOG_DEVICE=1
 
