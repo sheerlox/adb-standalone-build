@@ -30,9 +30,9 @@ endif
 
 $(info Checking if Platform Tools version $(PLATFORM_TOOLS_VERSION) exists...)
 VERSION_EXISTS := $(shell git ls-remote --exit-code --tags https://android.googlesource.com/platform/manifest refs/tags/$(PLATFORM_TOOLS_REF) >/dev/null 2>&1; echo $$?)
-# $(info $(VERSION_EXISTS))
 ifneq ($(VERSION_EXISTS),0)
-  $(error Platform Tools version $(PLATFORM_TOOLS_VERSION) doesn't exist. Please refer to https://android.googlesource.com/platform/manifest/+refs for available tags)
+	AVAILABLE_VERSION := $(shell git ls-remote --tags https://android.googlesource.com/platform/system/incremental_delivery refs/tags/platform-tools-* | grep -v "\^{}" | awk '{ORS=", "} {gsub("refs/tags/platform-tools-", ""); print $$2}')
+  $(error Platform Tools version $(PLATFORM_TOOLS_VERSION) doesn't exist. Available versions: $(AVAILABLE_VERSION))
 else
   $(info Platform Tools version $(PLATFORM_TOOLS_VERSION) found!)
 endif
