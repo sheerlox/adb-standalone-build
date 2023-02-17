@@ -1,6 +1,10 @@
-# Methodolody
+# Methodology
+
+Yes, a C++ developer would probably chop my head off reading this "methodology". Sorry, I'm basically hacking my way through. Don't hesitate to open an issue to provide constructive feedback on why this is an abomination :heart:
 
 ## Updating `libdepends`, `libadb` & `adb` source files list in `src/Makefile`
+
+Once you've updated sources with this method, just try to compile and find / include any missing source file.
 
 ### libdepends
 This one is really hacky: run `./utils/generate_libdepends_sources.sh`, replace `.???` with the correct source extensions and copy the result to the `libdepends_a_SOURCES_CXX` variable in `src/Makefile`.
@@ -11,13 +15,13 @@ There will be multiple entries to remove from that result (e.g. `android-base/en
 
 In `src/adb/Android.bp`, find `libadb_host` library declaration (look at the `srcs` property).
 Then update all `libadb*_SOURCES` variables in `src/Makefile`.
-Also include the source files from every `libadb_*` depedency in the `static_libs` property. You can find those in the respective `Android.bp` files (e.g. `libadb_crypto` in `adb/crypto/Android.bp`).
+Also include the source files from every `libadb_*` dependency in the `static_libs` property. You can find those in the respective `Android.bp` files (e.g. `libadb_crypto` in `adb/crypto/Android.bp`).
+Also include the source files from `libfastdeploy_host`.
 
 ### adb
 
 In `src/adb/Android.bp`, find `adb` binary declaration (look at the `srcs` property).
 Then update the `adb_SOURCES` variable in `src/Makefile`.
-
 
 ## Adding a missing header
 

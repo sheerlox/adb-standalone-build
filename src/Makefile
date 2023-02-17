@@ -20,7 +20,7 @@ libadb_a_TARGET := $(OUT_DIR)/libadb.a
 adb_TARGET := $(OUT_DIR)/adb
 
 DEPENDS_INC := $(addprefix -I,$(wildcard depends/*/include))
-ADB_INC := -Iadb -Iadb/crypto -Iadb/proto -Iadb/pairing_connection/include  -Iadb/tls/include $(addprefix -I,$(wildcard adb/*/include))
+ADB_INC := -Iadb -Iadb/crypto -Iadb/proto -Iadb/fastdeploy/proto -Iadb/pairing_connection/include -Iadb/tls/include $(addprefix -I,$(wildcard adb/*/include))
 EXTERNAL_INC := -Iexternal/protobuf/src -Iexternal/boringssl/include -Iexternal/libusb/include -Iexternal/lz4/lib -Iexternal/zstd/lib -Iexternal/mdnsresponder/mDNSShared
 
 ADB_COMMON_FLAGS := \
@@ -97,7 +97,10 @@ libadb_a_SOURCES_CXX := \
 	adb/crypto/x509_generator.cpp \
 	adb/pairing_connection/pairing_connection.cpp \
 	adb/tls/adb_ca_list.cpp \
-	adb/tls/tls_connection.cpp
+	adb/tls/tls_connection.cpp \
+	adb/fastdeploy/deploypatchgenerator/apk_archive.cpp \
+	adb/fastdeploy/deploypatchgenerator/deploy_patch_generator.cpp \
+	adb/fastdeploy/deploypatchgenerator/patch_utils.cpp
 
 libadb_a_linux_SOURCES_CXX := \
 	adb/client/usb_linux.cpp \
@@ -113,7 +116,8 @@ libadb_a_SOURCES_CC := \
 	adb/proto/adb_known_hosts.pb.cc \
 	adb/proto/app_processes.pb.cc \
 	adb/proto/key_type.pb.cc \
-	adb/proto/pairing.pb.cc
+	adb/proto/pairing.pb.cc \
+	adb/fastdeploy/proto/ApkEntry.pb.cc
 
 libadb_a_CXXFLAGS := $(ADB_COMMON_FLAGS)
 
