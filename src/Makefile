@@ -22,7 +22,7 @@ adb_TARGET := $(OUT_DIR)/adb
 
 DEPENDS_INC := -Idepends/libziparchive/incfs_support/include -Idepends/mdnssd $(addprefix -I,$(wildcard depends/*/include))
 ADB_INC := -Iadb -Iadb/crypto -Iadb/proto -Iadb/fastdeploy/proto -Iadb/pairing_connection/include -Iadb/tls/include $(addprefix -I,$(wildcard adb/*/include))
-EXTERNAL_INC := -Iexternal/protobuf/src -Iexternal/boringssl/include -Iexternal/libusb/include -Iexternal/lz4/lib -Iexternal/zstd/lib -Iexternal/zlib
+EXTERNAL_INC := -Iexternal/protobuf/src -Iexternal/boringssl/include -Iexternal/libusb/include -Iexternal/lz4/lib -Iexternal/zstd/lib -Iexternal/zlib -Iexternal/brotli/c/include
 
 ADB_COMMON_FLAGS := \
 	-DADB_HOST=1 \
@@ -230,7 +230,10 @@ adb_SOURCES := \
 
 adb_CXXFLAGS :=	-std=gnu++20 -D_GNU_SOURCE $(ADB_COMMON_FLAGS) -D_Nonnull= -D_Nullable= -fpermissive
 
-adb_LDFLAG := external/protobuf/libprotobuf.a external/boringssl/build/ssl/libssl.a external/boringssl/build/crypto/libcrypto.a external/zlib/libz.a external/lz4/lib/liblz4.a external/zstd/lib/libzstd.a -Lexternal/libusb/libusb/.libs -l:libusb-1.0.a -ludev -lpthread -static-libgcc -static-libstdc++
+adb_LDFLAG := external/protobuf/libprotobuf.a external/boringssl/build/ssl/libssl.a external/boringssl/build/crypto/libcrypto.a	\
+	external/zlib/libz.a external/lz4/lib/liblz4.a external/zstd/lib/libzstd.a external/brotli/libbrotlienc-static.a \
+	external/brotli/libbrotlidec-static.a external/brotli/libbrotlicommon-static.a external/libusb/libusb/.libs/libusb-1.0.a \
+	-ludev -lpthread -static-libgcc -static-libstdc++
 
 adb_OBJ_CXX := $(patsubst %.cpp,%.o, $(adb_SOURCES))
 

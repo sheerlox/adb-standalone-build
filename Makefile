@@ -12,7 +12,7 @@ EXTERNAL_DIR := $(SOURCE_DIR)/external
 NPROCS := $(shell grep -c ^processor /proc/cpuinfo)
 
 # comment out the following line to get full commands output
-SUPPRESS_OUTPUT := >/dev/null 2>error.log
+SUPPRESS_OUTPUT := >/dev/null 2>>error.log
 
 # create working directories if they don't exist
 ifneq ($(STAMPS_DIR), $(wildcard $(STAMPS_DIR)))
@@ -149,8 +149,7 @@ $(STAMPS_DIR)/patch_incfs_util_source:
 ########################
 #   DOWNLOAD HEADERS   #
 ########################
-all_download_headers: download_android_headers download_adbd_auth_headers download_brotli_headers \
-	download_fmtlib_headers download_system_headers download_gtest_headers \
+all_download_headers: download_android_headers download_adbd_auth_headers	download_fmtlib_headers download_system_headers download_gtest_headers \
 	generate_pt_version_header generate_deployagent_includes
 
 download_android_headers: $(INCLUDES_DIR)/android
@@ -163,11 +162,6 @@ download_adbd_auth_headers: $(INCLUDES_DIR)/adbd_auth.h
 $(INCLUDES_DIR)/adbd_auth.h:
 	@echo "Downloading adbd_auth headers ..."
 	@curl https://android.googlesource.com/platform/frameworks/native/+/refs/tags/$(PLATFORM_TOOLS_REF)/libs/adbd_auth/include/adbd_auth.h?format=text -s | base64 -d > $(INCLUDES_DIR)/adbd_auth.h
-
-download_brotli_headers: $(INCLUDES_DIR)/brotli
-$(INCLUDES_DIR)/brotli:
-	@echo "Downloading brotli headers ..."
-	@bash utils/git_sparse.sh https://android.googlesource.com/platform/external/brotli $(PLATFORM_TOOLS_REF) c/include/brotli/ $(INCLUDES_DIR)/brotli/ $(SUPPRESS_OUTPUT)
 
 download_fmtlib_headers: $(INCLUDES_DIR)/fmt
 $(INCLUDES_DIR)/fmt:
@@ -200,7 +194,7 @@ $(SOURCE_DIR)/adb/deployagentscript.inc:
 #  DOWNLOAD EXTERNAL   #
 ########################
 all_download_external: download_zlib_external download_protobuf_external download_boringssl_external download_libusb_external	download_lz4_external \
-	download_zstd_external
+	download_zstd_external download_brotli_external
 
 download_zlib_external: $(EXTERNAL_DIR)/zlib
 $(EXTERNAL_DIR)/zlib:
@@ -235,10 +229,15 @@ $(EXTERNAL_DIR)/zstd:
 	@git clone https://github.com/facebook/zstd --single-branch --branch v$$(./utils/get_zstd_version.sh $(PLATFORM_TOOLS_VERSION)) $(EXTERNAL_DIR)/zstd $(SUPPRESS_OUTPUT)
 	@rm -rf $(EXTERNAL_DIR)/zstd/.git
 
+download_brotli_external: $(EXTERNAL_DIR)/brotli
+$(EXTERNAL_DIR)/brotli:
+	@echo "Downloading brotli ..."
+	@git clone https://android.googlesource.com/platform/external/brotli --single-branch --branch $(PLATFORM_TOOLS_REF) $(EXTERNAL_DIR)/brotli/ $(SUPPRESS_OUTPUT)
+
 ########################
 #        BUILD         #
 ########################
-all_build: build_zlib_external build_protobuf_external build_libusb_external build_boringssl_external build_liblz4_external build_libzstd_external
+all_build: build_zlib_external build_protobuf_external build_libusb_external build_boringssl_external build_liblz4_external build_libzstd_external build_brotli_external
 
 build_zlib_external: download_zlib_external $(EXTERNAL_DIR)/zlib/libz.a
 $(EXTERNAL_DIR)/zlib/libz.a:
@@ -290,6 +289,17 @@ $(EXTERNAL_DIR)/zstd/lib/libzstd.a:
 	@echo "Building libzstd ..."
 	@cd $(EXTERNAL_DIR)/zstd; \
 		make lib $(SUPPRESS_OUTPUT)
+
+build_brotli_external: download_brotli_external $(EXTERNAL_DIR)/brotli/libbrotlicommon-static.a $(EXTERNAL_DIR)/brotli/libbrotlidec-static.a $(EXTERNAL_DIR)/brotli/libbrotlienc-static.a
+$(EXTERNAL_DIR)/brotli/libbrotlicommon-static.a:
+$(EXTERNAL_DIR)/brotli/libbrotlidec-static.a:
+$(EXTERNAL_DIR)/brotli/libbrotlienc-static.a:
+	@echo "Building brotli ..."
+	@cd $(EXTERNAL_DIR)/brotli; \
+		./configure-cmake --disable-debug $(SUPPRESS_OUTPUT); \
+		make; \
+		echo "Testing brotli build ..."; \
+		make test $(SUPPRESS_OUTPUT)
 
 ########################
 #       COMPILE        #
