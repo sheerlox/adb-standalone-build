@@ -17,6 +17,7 @@ CC  = clang
 
 libdepends_a_TARGET := $(OUT_DIR)/libdepends.a
 libadb_a_TARGET := $(OUT_DIR)/libadb.a
+libmdnssd_a_TARGET := $(OUT_DIR)/libmsdbssd.a
 adb_TARGET := $(OUT_DIR)/adb
 
 DEPENDS_INC := -Idepends/libziparchive/incfs_support/include $(addprefix -I,$(wildcard depends/*/include))
@@ -27,7 +28,7 @@ ADB_COMMON_FLAGS := \
 	-DADB_HOST=1 \
 	-DANDROID_BASE_UNIQUE_FD_DISABLE_IMPLICIT_CONVERSION=1
 
-all: $(libdepends_a_TARGET) $(libadb_a_TARGET) $(adb_TARGET)
+all: $(libdepends_a_TARGET) $(libmdnssd_a_TARGET) $(libadb_a_TARGET) $(adb_TARGET)
 adb: $(libadb_a_TARGET) $(adb_TARGET)
 
 .PHONY: all
@@ -90,6 +91,50 @@ $(libdepends_a_OBJ_CC): %.o:%.cc
 
 $(libdepends_a_TARGET): $(libdepends_a_OBJ_CXX) $(libdepends_a_OBJ_CC)
 	ar rc $(libdepends_a_TARGET) $(libdepends_a_OBJ_CXX) $(libdepends_a_OBJ_CC)
+
+########################
+#      libmdnssd       #
+########################
+libmdnssd_a_INC := -Idepends/mdnssd
+
+libmdnssd_a_SOURCES_C := \
+	depends/mdnssd/dnssd_clientlib.c \
+	depends/mdnssd/dnssd_clientstub.c \
+	depends/mdnssd/dnssd_ipc.c
+
+libmdnssd_a_CFLAGS := \
+	-O2 \
+	-g \
+	-fno-strict-aliasing \
+	-fwrapv \
+	-D_GNU_SOURCE \
+	-DHAVE_IPV6 \
+	-DNOT_HAVE_SA_LEN \
+	-DPLATFORM_NO_RLIMIT \
+	-DMDNS_DEBUGMSGS=0 \
+	-DMDNS_UDS_SERVERPATH=\"/dev/socket/mdnsd\" \
+	-DMDNS_USERNAME=\"mdnsr\" \
+	-W \
+	-Wall \
+	-Wextra \
+	-Wno-address-of-packed-member \
+	-Wno-array-bounds \
+	-Wno-pointer-sign \
+	-Wno-unused \
+	-Wno-unused-const-variable \
+	-Wno-unused-parameter \
+	-Werror=implicit-function-declaration \
+	-DTARGET_OS_LINUX \
+	-DHAVE_LINUX \
+	-DUSES_NETLINK \
+	-DADB_HOST=1
+
+libmdnssd_a_OBJ_C := $(patsubst %.c,%.o, $(libmdnssd_a_SOURCES_C))
+$(libmdnssd_a_OBJ_C): %.o:%.c
+	$(CC) -c $(libmdnssd_a_INC) $(libmdnssd_a_CFLAGS) $< -o $@
+
+$(libmdnssd_a_TARGET): $(OUT_DIR) $(libmdnssd_a_OBJ_C)
+	ar rc $(libmdnssd_a_TARGET) $(libmdnssd_a_OBJ_C)
 
 ########################
 #       libadb         #
@@ -194,7 +239,7 @@ $(adb_OBJ_CXX): %.o:%.cpp
 	$(CXX) -c $(adb_INC) $(adb_CXXFLAGS) $< -o $@
 
 $(adb_TARGET): $(adb_OBJ_CXX)
-	$(CXX) -o $@ $^ $(adb_CXXFLAGS) $(libadb_a_TARGET) $(libdepends_a_TARGET) $(adb_LDFLAG)
+	$(CXX) -o $@ $^ $(adb_CXXFLAGS) $(libadb_a_TARGET) $(libmdnssd_a_TARGET) $(libdepends_a_TARGET) $(adb_LDFLAG)
 
 clean:
-	rm -rf $(libdepends_a_OBJ_CXX) $(libdepends_a_OBJ_C) $(libadb_a_OBJ_CXX) $(libadb_a_OBJ_CXX) $(adb_OBJ_CXX) $(OUT_DIR)
+	rm -rf $(libdepends_a_OBJ_CXX) $(libdepends_a_OBJ_C) $(libadb_a_OBJ_CXX) $(libadb_a_OBJ_CXX) $(adb_OBJ_CXX) $(libmdnssd_a_OBJ_C) $(OUT_DIR)
