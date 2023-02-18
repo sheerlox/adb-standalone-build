@@ -4,6 +4,7 @@ This project aims to build standalone `adb` for the arm/arm64 platform from down
 
 ## Requirements
 
+- `cmake` (to build Protobuf & BoringSSL)
 - `golang-go` (to build BoringSSL)
 - `libunwind-dev` (optional, to test BoringSSL build)
 - `autoconf` (to build libusb)
@@ -13,7 +14,7 @@ This project aims to build standalone `adb` for the arm/arm64 platform from down
 
 For Debian / Ubuntu:
 ```bash
-sudo apt-get install golang-go libunwind-dev autoconf libtool libudev1 libudev-dev
+sudo apt-get install cmake golang-go libunwind-dev autoconf libtool libudev1 libudev-dev
 ```
 
 ## Resources
