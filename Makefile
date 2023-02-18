@@ -297,7 +297,7 @@ $(EXTERNAL_DIR)/brotli/libbrotlienc-static.a:
 	@echo "Building brotli ..."
 	@cd $(EXTERNAL_DIR)/brotli; \
 		./configure-cmake --disable-debug $(SUPPRESS_OUTPUT); \
-		make; \
+		make $(SUPPRESS_OUTPUT); \
 		echo "Testing brotli build ..."; \
 		make test $(SUPPRESS_OUTPUT)
 
