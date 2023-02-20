@@ -39,6 +39,7 @@ endif
 ifneq ($(LIBS_DIR), $(wildcard $(LIBS_DIR)))
   $(shell mkdir -p $(LIBS_DIR))
 endif
+$(shell rm error.log && touch error.log)
 
 $(info Checking if Platform Tools version $(PLATFORM_TOOLS_VERSION) exists...)
 VERSION_EXISTS := $(shell git ls-remote --exit-code --tags https://android.googlesource.com/platform/manifest refs/tags/$(PLATFORM_TOOLS_REF) >/dev/null 2>&1; echo $$?)
@@ -51,7 +52,7 @@ endif
 
 all: make_adb
 
-make_adb: all_download_source all_patch_source all_download_headers all_download_external all_build $(OUT_DIR)/adb
+make_adb: all_download_source all_download_external all_download_headers all_patch_source all_build_external $(OUT_DIR)/adb
 $(OUT_DIR)/adb:
 	@echo "Building adb ..."
 	@cd $(SOURCE_DIR) && make
@@ -133,6 +134,50 @@ $(DEPENDS_DIR)/mdnssd:
 	@bash utils/git_sparse.sh https://android.googlesource.com/platform/external/mdnsresponder $(PLATFORM_TOOLS_REF) mDNSShared $(DEPENDS_DIR)/mdnssd $(SUPPRESS_OUTPUT)
 
 ########################
+#  DOWNLOAD EXTERNAL   #
+########################
+all_download_external: download_zlib_external download_protobuf_external download_boringssl_external download_libusb_external	download_lz4_external \
+	download_zstd_external download_brotli_external
+
+download_zlib_external: $(EXTERNAL_DIR)/zlib
+$(EXTERNAL_DIR)/zlib:
+	@echo "Downloading zlib source ..."
+	@git clone https://github.com/madler/zlib --single-branch --branch v$$(./utils/get_zlib_version.sh $(PLATFORM_TOOLS_VERSION)) $(EXTERNAL_DIR)/zlib $(SUPPRESS_OUTPUT)
+
+download_protobuf_external: $(EXTERNAL_DIR)/protobuf
+$(EXTERNAL_DIR)/protobuf:
+	@echo "Downloading protobuf source ..."
+	@git clone https://github.com/protocolbuffers/protobuf --recurse-submodules --single-branch --branch v$$(./utils/get_protobuf_version.sh $(PLATFORM_TOOLS_VERSION)) $(EXTERNAL_DIR)/protobuf $(SUPPRESS_OUTPUT)
+	@rm -rf $(EXTERNAL_DIR)/protobuf/**/.git
+
+download_boringssl_external: $(EXTERNAL_DIR)/boringssl
+$(EXTERNAL_DIR)/boringssl:
+	@echo "Downloading boringssl source ..."
+	@bash utils/git_sparse.sh https://android.googlesource.com/platform/external/boringssl $(PLATFORM_TOOLS_REF) src $(EXTERNAL_DIR)/boringssl $(SUPPRESS_OUTPUT)
+
+download_libusb_external: $(EXTERNAL_DIR)/libusb
+$(EXTERNAL_DIR)/libusb:
+	@echo "Downloading libusb source ..."
+	@git clone https://android.googlesource.com/platform/external/libusb --single-branch --branch $(PLATFORM_TOOLS_REF) $(EXTERNAL_DIR)/libusb/ $(SUPPRESS_OUTPUT)
+
+download_lz4_external: $(EXTERNAL_DIR)/lz4
+$(EXTERNAL_DIR)/lz4:
+	@echo "Downloading lz4 source ..."
+	@git clone https://github.com/lz4/lz4 --single-branch --branch v$$(./utils/get_lz4_version.sh $(PLATFORM_TOOLS_VERSION)) $(EXTERNAL_DIR)/lz4 $(SUPPRESS_OUTPUT)
+	@rm -rf $(EXTERNAL_DIR)/lz4/.git
+
+download_zstd_external: $(EXTERNAL_DIR)/zstd
+$(EXTERNAL_DIR)/zstd:
+	@echo "Downloading zstd source ..."
+	@git clone https://github.com/facebook/zstd --single-branch --branch v$$(./utils/get_zstd_version.sh $(PLATFORM_TOOLS_VERSION)) $(EXTERNAL_DIR)/zstd $(SUPPRESS_OUTPUT)
+	@rm -rf $(EXTERNAL_DIR)/zstd/.git
+
+download_brotli_external: $(EXTERNAL_DIR)/brotli
+$(EXTERNAL_DIR)/brotli:
+	@echo "Downloading brotli ..."
+	@git clone https://android.googlesource.com/platform/external/brotli --single-branch --branch $(PLATFORM_TOOLS_REF) $(EXTERNAL_DIR)/brotli/ $(SUPPRESS_OUTPUT)
+
+########################
 #     PATCH SOURCE     #
 ########################
 all_patch_source: patch_adb_source patch_incfs_util_source
@@ -208,53 +253,9 @@ $(SOURCE_DIR)/adb/deployagentscript.inc:
 	@(echo 'unsigned char kDeployAgentScript[] = {' && xxd -i <$(SOURCE_DIR)/adb/fastdeploy/deployagent/src/com/android/fastdeploy/DeployAgent.java && echo '};') > $(SOURCE_DIR)/adb/deployagentscript.inc
 
 ########################
-#  DOWNLOAD EXTERNAL   #
-########################
-all_download_external: download_zlib_external download_protobuf_external download_boringssl_external download_libusb_external	download_lz4_external \
-	download_zstd_external download_brotli_external
-
-download_zlib_external: $(EXTERNAL_DIR)/zlib
-$(EXTERNAL_DIR)/zlib:
-	@echo "Downloading zlib source ..."
-	@git clone https://github.com/madler/zlib --single-branch --branch v$$(./utils/get_zlib_version.sh $(PLATFORM_TOOLS_VERSION)) $(EXTERNAL_DIR)/zlib $(SUPPRESS_OUTPUT)
-
-download_protobuf_external: $(EXTERNAL_DIR)/protobuf
-$(EXTERNAL_DIR)/protobuf:
-	@echo "Downloading protobuf source ..."
-	@git clone https://github.com/protocolbuffers/protobuf --recurse-submodules --single-branch --branch v$$(./utils/get_protobuf_version.sh $(PLATFORM_TOOLS_VERSION)) $(EXTERNAL_DIR)/protobuf $(SUPPRESS_OUTPUT)
-	@rm -rf $(EXTERNAL_DIR)/protobuf/**/.git
-
-download_boringssl_external: $(EXTERNAL_DIR)/boringssl
-$(EXTERNAL_DIR)/boringssl:
-	@echo "Downloading boringssl source ..."
-	@bash utils/git_sparse.sh https://android.googlesource.com/platform/external/boringssl $(PLATFORM_TOOLS_REF) src $(EXTERNAL_DIR)/boringssl $(SUPPRESS_OUTPUT)
-
-download_libusb_external: $(EXTERNAL_DIR)/libusb
-$(EXTERNAL_DIR)/libusb:
-	@echo "Downloading libusb source ..."
-	@git clone https://android.googlesource.com/platform/external/libusb --single-branch --branch $(PLATFORM_TOOLS_REF) $(EXTERNAL_DIR)/libusb/ $(SUPPRESS_OUTPUT)
-
-download_lz4_external: $(EXTERNAL_DIR)/lz4
-$(EXTERNAL_DIR)/lz4:
-	@echo "Downloading lz4 source ..."
-	@git clone https://github.com/lz4/lz4 --single-branch --branch v$$(./utils/get_lz4_version.sh $(PLATFORM_TOOLS_VERSION)) $(EXTERNAL_DIR)/lz4 $(SUPPRESS_OUTPUT)
-	@rm -rf $(EXTERNAL_DIR)/lz4/.git
-
-download_zstd_external: $(EXTERNAL_DIR)/zstd
-$(EXTERNAL_DIR)/zstd:
-	@echo "Downloading zstd source ..."
-	@git clone https://github.com/facebook/zstd --single-branch --branch v$$(./utils/get_zstd_version.sh $(PLATFORM_TOOLS_VERSION)) $(EXTERNAL_DIR)/zstd $(SUPPRESS_OUTPUT)
-	@rm -rf $(EXTERNAL_DIR)/zstd/.git
-
-download_brotli_external: $(EXTERNAL_DIR)/brotli
-$(EXTERNAL_DIR)/brotli:
-	@echo "Downloading brotli ..."
-	@git clone https://android.googlesource.com/platform/external/brotli --single-branch --branch $(PLATFORM_TOOLS_REF) $(EXTERNAL_DIR)/brotli/ $(SUPPRESS_OUTPUT)
-
-########################
 #        BUILD         #
 ########################
-all_build: build_zlib_external build_protobuf_external build_libusb_external build_boringssl_external build_liblz4_external build_libzstd_external build_brotli_external
+all_build_external: build_zlib_external build_protobuf_external build_libusb_external build_boringssl_external build_liblz4_external build_libzstd_external build_brotli_external
 
 build_zlib_external: download_zlib_external $(LIBS_DIR)/libz.a
 $(LIBS_DIR)/libz.a:
