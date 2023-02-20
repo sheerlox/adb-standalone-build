@@ -180,7 +180,7 @@ $(EXTERNAL_DIR)/brotli:
 ########################
 #     PATCH SOURCE     #
 ########################
-all_patch_source: patch_adb_source patch_incfs_util_source
+all_patch_source: patch_adb_source patch_incfs_util_source patch_buildversion_source
 
 patch_adb_source: $(STAMPS_DIR)/patch_adb_source
 $(STAMPS_DIR)/patch_adb_source:
@@ -207,6 +207,12 @@ $(STAMPS_DIR)/patch_incfs_util_source:
 			sed -i '/^#include <vector>/i #include <atomic>' $(DEPENDS_DIR)/incfs_util/include/util/map_ptr.h; \
 		fi
 	@touch $(STAMPS_DIR)/patch_incfs_util_source
+
+patch_buildversion_source: $(STAMPS_DIR)/patch_buildversion_source
+$(STAMPS_DIR)/patch_buildversion_source:
+	@echo "Patching buildversion source ..."
+	@sed -i "s/SOONG BUILD NUMBER PLACEHOLDER/sheerlox\/adb-standalone-build/g" $(DEPENDS_DIR)/buildversion/libbuildversion.cpp
+	@touch $(STAMPS_DIR)/patch_buildversion_source
 
 ########################
 #   DOWNLOAD HEADERS   #
