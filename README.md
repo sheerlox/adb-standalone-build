@@ -36,6 +36,10 @@ By default, messages are logged by each target (e.g. `Downloading adb source ...
 
 - `x86_64 Ubuntu 22.04 5.15.0-60-generic` / `clang 14` / `cmake 3.22` / `go 1.18` / `autoconf 2.71` / `libtool 2.4`
 
+## Screenshot
+
+![image](https://user-images.githubusercontent.com/11234273/220209076-2fed1089-cc5e-4d88-b910-0c796a6dc77e.png)
+
 ## Credits
 
 > Initially forked from [stevenrao/adb-proj](https://github.com/stevenrao/adb-proj).
