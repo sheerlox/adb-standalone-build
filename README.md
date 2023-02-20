@@ -30,7 +30,7 @@ cd adb-standalone-build
 make
 ```
 
-By default messages are log by each target (e.g. `Downloading adb source ...`, `Building boringssl ...`, etc...) and commands output is muted to follow the build more easily, but you can `tail -f error.log` to watch if anything goes wrong, or just comment the `SUPPRESS_OUTPUT` line in the root `Makefile` to get full commands output.
+By default, messages are logged by each target (e.g. `Downloading adb source ...`, `Building boringssl ...`, etc...) and the commands' output is muted to follow the build more easily, but you can `tail -f error.log` to watch if anything goes wrong, or just comment the `SUPPRESS_OUTPUT` line in the root `Makefile` to get full commands output.
 
 ## Tested on
 
