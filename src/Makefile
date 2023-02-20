@@ -1,32 +1,38 @@
-HOSTARCH := $(shell uname -m | \
-	sed -e s/i.86/i386/ \
-	-e s/sun4u/sparc64/ \
-	-e s/arm.*/arm/ \
-	-e s/sa110/arm/ \
-	-e s/ppc64/powerpc/ \
-	-e s/ppc/powerpc/ \
-	-e s/macppc/powerpc/)
-OUT_DIR := ../out/$(HOSTARCH)
-
-ifneq ($(OUT_DIR), $(wildcard $(OUT_DIR)))
-  $(shell mkdir -p $(OUT_DIR))
-endif
+SHELL := /bin/bash
 
 CXX = clang++ -std=c++20
 CC  = clang
 
-libdepends_a_TARGET := $(OUT_DIR)/libdepends.a
-libadb_a_TARGET := $(OUT_DIR)/libadb.a
-libmdnssd_a_TARGET := $(OUT_DIR)/libmsdbssd.a
-adb_TARGET := $(OUT_DIR)/adb
+# stop execution if any of the parent Makefile variables are not defined
+ifeq ($(and $(DEPENDS_DIR),$(INCLUDES_DIR),$(EXTERNAL_DIR),$(OUT_DIR),$(LIBS_DIR)),)
+  $(error This Makefile should only be called from the root Makefile)
+endif
+
+INTER_DIR := $(OUT_DIR)/.intermediates
+BIN_DIR := $(OUT_DIR)/bin
+
+libdepends_a_TARGET := $(INTER_DIR)/libdepends.a
+libadb_a_TARGET := $(INTER_DIR)/libadb.a
+libmdnssd_a_TARGET := $(INTER_DIR)/libmsdbssd.a
+adb_TARGET := $(BIN_DIR)/adb
 
 DEPENDS_INC := -Idepends/libziparchive/incfs_support/include -Idepends/mdnssd $(addprefix -I,$(wildcard depends/*/include))
-ADB_INC := -Iadb -Iadb/crypto -Iadb/proto -Iadb/fastdeploy/proto -Iadb/pairing_connection/include -Iadb/tls/include $(addprefix -I,$(wildcard adb/*/include))
-EXTERNAL_INC := -Iexternal/protobuf/src -Iexternal/boringssl/include -Iexternal/libusb/include -Iexternal/lz4/lib -Iexternal/zstd/lib -Iexternal/zlib -Iexternal/brotli/c/include
+ADB_INC := -Iadb -Iadb/crypto -Iadb/proto -Iadb/fastdeploy/proto -Iadb/pairing_connection/include \
+	-Iadb/tls/include $(addprefix -I,$(wildcard adb/*/include))
+EXTERNAL_INC := -Iexternal/protobuf/src -Iexternal/boringssl/include -Iexternal/libusb/include \
+	-Iexternal/lz4/lib -Iexternal/zstd/lib -Iexternal/zlib -Iexternal/brotli/c/include
 
 ADB_COMMON_FLAGS := \
 	-DADB_HOST=1 \
 	-DANDROID_BASE_UNIQUE_FD_DISABLE_IMPLICIT_CONVERSION=1
+
+# create working directories if they don't exist
+ifneq ($(INTER_DIR), $(wildcard $(INTER_DIR)))
+  $(shell mkdir -p $(INTER_DIR))
+endif
+ifneq ($(BIN_DIR), $(wildcard $(BIN_DIR)))
+  $(shell mkdir -p $(BIN_DIR))
+endif
 
 all: compile_proto_files $(libdepends_a_TARGET) $(libmdnssd_a_TARGET) $(libadb_a_TARGET) $(adb_TARGET)
 
@@ -38,10 +44,10 @@ all: compile_proto_files $(libdepends_a_TARGET) $(libmdnssd_a_TARGET) $(libadb_a
 PROTO_SOURCES := $(shell find adb/proto/ adb/fastdeploy/proto/ -name '*.proto')
 PROTO_TARGETS := $(patsubst %.proto,%.pb.cc, $(PROTO_SOURCES)) $(patsubst %.proto,%.pb.h, $(PROTO_SOURCES))
 
-compile_proto_files:
+compile_proto_files: $(PROTO_TARGETS)
 $(PROTO_TARGETS)&:
-	@external/protobuf/protoc -I=adb/proto/ --cpp_out=adb/proto/ adb/proto/*.proto $(SUPPRESS_OUTPUT)
-	@external/protobuf/protoc -I=adb/fastdeploy/proto/ --cpp_out=adb/fastdeploy/proto/ adb/fastdeploy/proto/*.proto $(SUPPRESS_OUTPUT)
+	$(LIBS_DIR)/protoc -I=adb/proto/ --cpp_out=adb/proto/ adb/proto/*.proto $(SUPPRESS_OUTPUT)
+	$(LIBS_DIR)/protoc -I=adb/fastdeploy/proto/ --cpp_out=adb/fastdeploy/proto/ adb/fastdeploy/proto/*.proto $(SUPPRESS_OUTPUT)
 
 ########################
 #     libdepends       #
@@ -240,10 +246,8 @@ adb_SOURCES := \
 
 adb_CXXFLAGS :=	-std=gnu++20 -D_GNU_SOURCE $(ADB_COMMON_FLAGS) -D_Nonnull= -D_Nullable= -fpermissive
 
-adb_LDFLAG := external/protobuf/libprotobuf.a external/boringssl/build/ssl/libssl.a external/boringssl/build/crypto/libcrypto.a	\
-	external/zlib/libz.a external/lz4/lib/liblz4.a external/zstd/lib/libzstd.a external/brotli/libbrotlienc-static.a \
-	external/brotli/libbrotlidec-static.a external/brotli/libbrotlicommon-static.a external/libusb/libusb/.libs/libusb-1.0.a \
-	-ludev -lpthread -static-libgcc -static-libstdc++
+adb_LDFLAG := -ludev -lpthread -static-libgcc -static-libstdc++ -L$(LIBS_DIR) -l:libprotobuf.a -l:libssl.a -l:libcrypto.a -l:libz.a \
+	-l:liblz4.a -l:libzstd.a -l:libbrotlienc-static.a -l:libbrotlidec-static.a -l:libbrotlicommon-static.a -l:libusb-1.0.a
 
 adb_OBJ_CXX := $(patsubst %.cpp,%.o, $(adb_SOURCES))
 
@@ -254,4 +258,4 @@ $(adb_TARGET): $(adb_OBJ_CXX)
 	$(CXX) -o $@ $^ $(adb_CXXFLAGS) $(libadb_a_TARGET) $(libmdnssd_a_TARGET) $(libdepends_a_TARGET) $(adb_LDFLAG)
 
 clean:
-	rm -rf $(libdepends_a_OBJ_CXX) $(libdepends_a_OBJ_C) $(libadb_a_OBJ_CXX) $(libadb_a_OBJ_CXX) $(adb_OBJ_CXX) $(libmdnssd_a_OBJ_C) $(OUT_DIR)
+	rm -rf $(BIN_DIR) $(INTER_DIR) $(libdepends_a_OBJ_CXX) $(libdepends_a_OBJ_CC) $(libadb_a_OBJ_CXX) $(libadb_a_OBJ_CC) $(adb_OBJ_CXX) $(libmdnssd_a_OBJ_C) $(PROTO_TARGETS)

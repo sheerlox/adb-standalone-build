@@ -3,16 +3,25 @@ SHELL := /bin/bash
 PLATFORM_TOOLS_VERSION := 31.0.0
 PLATFORM_TOOLS_REF := platform-tools-$(PLATFORM_TOOLS_VERSION)
 
+# comment out the following line to get full commands output
+SUPPRESS_OUTPUT := >/dev/null 2>>error.log
+
 STAMPS_DIR := .stamps
 SOURCE_DIR := $(abspath src)
 DEPENDS_DIR := $(SOURCE_DIR)/depends
 INCLUDES_DIR := $(SOURCE_DIR)/includes
 EXTERNAL_DIR := $(SOURCE_DIR)/external
+OUT_DIR := $(abspath out)
+LIBS_DIR := $(OUT_DIR)/.libs
 
 NPROCS := $(shell grep -c ^processor /proc/cpuinfo)
 
-# comment out the following line to get full commands output
-SUPPRESS_OUTPUT := >/dev/null 2>>error.log
+# export variables to make them available to the child Makefile
+export DEPENDS_DIR
+export INCLUDES_DIR
+export EXTERNAL_DIR
+export OUT_DIR
+export LIBS_DIR
 
 # create working directories if they don't exist
 ifneq ($(STAMPS_DIR), $(wildcard $(STAMPS_DIR)))
@@ -27,17 +36,25 @@ endif
 ifneq ($(EXTERNAL_DIR), $(wildcard $(EXTERNAL_DIR)))
   $(shell mkdir -p $(EXTERNAL_DIR))
 endif
+ifneq ($(LIBS_DIR), $(wildcard $(LIBS_DIR)))
+  $(shell mkdir -p $(LIBS_DIR))
+endif
 
 $(info Checking if Platform Tools version $(PLATFORM_TOOLS_VERSION) exists...)
 VERSION_EXISTS := $(shell git ls-remote --exit-code --tags https://android.googlesource.com/platform/manifest refs/tags/$(PLATFORM_TOOLS_REF) >/dev/null 2>&1; echo $$?)
 ifneq ($(VERSION_EXISTS),0)
-	AVAILABLE_VERSION := $(shell git ls-remote --tags https://android.googlesource.com/platform/system/incremental_delivery refs/tags/platform-tools-* | grep -v "\^{}" | awk '{ORS=", "} {gsub("refs/tags/platform-tools-", ""); print $$2}')
+	AVAILABLE_VERSION := $(shell git ls-remote --tags https://android.googlesource.com/platform/manifest refs/tags/platform-tools-* | grep -v "\^{}" | awk '{ORS=", "} {gsub("refs/tags/platform-tools-", ""); print $$2}')
   $(error Platform Tools version $(PLATFORM_TOOLS_VERSION) doesn't exist. Available versions: $(AVAILABLE_VERSION))
 else
   $(info Platform Tools version $(PLATFORM_TOOLS_VERSION) found!)
 endif
 
-all: all_download_source all_patch_source all_download_headers all_download_external all_build
+all: make_adb
+
+make_adb: all_download_source all_patch_source all_download_headers all_download_external all_build $(OUT_DIR)/adb
+$(OUT_DIR)/adb:
+	@echo "Building adb ..."
+	@cd $(SOURCE_DIR) && make
 
 ########################
 #   DOWNLOAD SOURCE    #
@@ -239,70 +256,81 @@ $(EXTERNAL_DIR)/brotli:
 ########################
 all_build: build_zlib_external build_protobuf_external build_libusb_external build_boringssl_external build_liblz4_external build_libzstd_external build_brotli_external
 
-build_zlib_external: download_zlib_external $(EXTERNAL_DIR)/zlib/libz.a
-$(EXTERNAL_DIR)/zlib/libz.a:
+build_zlib_external: download_zlib_external $(LIBS_DIR)/libz.a
+$(LIBS_DIR)/libz.a:
 	@echo "Building zlib ..."
 	@cd $(EXTERNAL_DIR)/zlib; \
 		./configure $(SUPPRESS_OUTPUT); \
-		make $(SUPPRESS_OUTPUT)
+		make $(SUPPRESS_OUTPUT); \
+		cp libz.a $(LIBS_DIR)
 
-build_protobuf_external: download_protobuf_external build_zlib_external $(EXTERNAL_DIR)/protobuf/protoc
-$(EXTERNAL_DIR)/protobuf/protoc:
+build_protobuf_external: download_protobuf_external build_zlib_external $(LIBS_DIR)/protoc $(LIBS_DIR)/libprotobuf.a
+$(LIBS_DIR)/protoc:
+$(LIBS_DIR)/libprotobuf.a:
 	@echo "Building protobuf ..."
 	@cd $(EXTERNAL_DIR)/protobuf; \
 		cmake ./cmake -DCMAKE_CXX_STANDARD=20 -DZLIB_LIBRARY=$(EXTERNAL_DIR)/zlib/libz.a -DZLIB_INCLUDE_DIR=$(EXTERNAL_DIR)/zlib/ $(SUPPRESS_OUTPUT); \
 		cmake --build . -j$(NPROCS) $(SUPPRESS_OUTPUT); \
 		echo "Testing protobuf build ..."; \
-		cmake --build . --target check $(SUPPRESS_OUTPUT)
+		cmake --build . --target check $(SUPPRESS_OUTPUT); \
+		cp protoc libprotobuf.a $(LIBS_DIR)
 
-build_libusb_external: download_libusb_external $(EXTERNAL_DIR)/libusb/libusb/.libs/libusb-1.0.a
-$(EXTERNAL_DIR)/libusb/libusb/.libs/libusb-1.0.a:
+build_libusb_external: download_libusb_external $(LIBS_DIR)/libusb-1.0.a
+$(LIBS_DIR)/libusb-1.0.a:
 	@echo "Building libusb ..."
 	@cd $(EXTERNAL_DIR)/libusb; \
-		env ./autogen.sh --enable-static --disable-shared $(SUPPRESS_OUTPUT); \
-		make $(SUPPRESS_OUTPUT);
+		./autogen.sh --enable-static --disable-shared $(SUPPRESS_OUTPUT); \
+		make $(SUPPRESS_OUTPUT); \
+		cp libusb/.libs/libusb-1.0.a $(LIBS_DIR)
 
-build_boringssl_external: download_boringssl_external $(EXTERNAL_DIR)/boringssl/build/crypto/libcrypto.a $(EXTERNAL_DIR)/boringssl/build/ssl/libssl.a
-$(EXTERNAL_DIR)/boringssl/build/crypto/libcrypto.a:
-$(EXTERNAL_DIR)/boringssl/build/ssl/libssl.a:
+build_boringssl_external: download_boringssl_external $(LIBS_DIR)/libcrypto.a $(LIBS_DIR)/libssl.a
+$(LIBS_DIR)/libcrypto.a:
+$(LIBS_DIR)/libssl.a:
 	@echo "Building boringssl ..."
 	@bash utils/git_sparse.sh https://android.googlesource.com/platform/external/googletest $(PLATFORM_TOOLS_REF) googletest/ $(EXTERNAL_DIR)/boringssl/third_party/googletest/ $(SUPPRESS_OUTPUT); \
-		cd src/external/boringssl/; \
-		sed -i 's/-Wformat=2 //' CMakeLists.txt; \
-		mkdir build && cd build; \
+		sed -i 's/-Wformat=2 //' $(EXTERNAL_DIR)/boringssl/CMakeLists.txt; \
+		mkdir -p $(EXTERNAL_DIR)/boringssl/build; \
+		cd $(EXTERNAL_DIR)/boringssl/build; \
 		CC=/usr/bin/clang CXX=/usr/bin/clang++ cmake .. $(SUPPRESS_OUTPUT); \
 		make $(SUPPRESS_OUTPUT); \
 		echo "Testing boringssl build ..."; \
-		cd ..; \
-		go run util/all_tests.go $(SUPPRESS_OUTPUT); \
-		cd ssl/test/runner; \
-		go test $(SUPPRESS_OUTPUT)
+		go run $(EXTERNAL_DIR)/boringssl/util/all_tests.go $(SUPPRESS_OUTPUT); \
+		cd $(EXTERNAL_DIR)/boringssl/ssl/test/runner && go test $(SUPPRESS_OUTPUT); \
+		cp $(EXTERNAL_DIR)/boringssl/build/ssl/libssl.a $(EXTERNAL_DIR)/boringssl/build/crypto/libcrypto.a $(LIBS_DIR)
 
-build_liblz4_external: download_lz4_external $(EXTERNAL_DIR)/lz4/lib/liblz4.a
-$(EXTERNAL_DIR)/lz4/lib/liblz4.a:
+build_liblz4_external: download_lz4_external $(LIBS_DIR)/liblz4.a
+$(LIBS_DIR)/liblz4.a:
 	@echo "Building lz4 ..."
 	@cd $(EXTERNAL_DIR)/lz4; \
-		make $(SUPPRESS_OUTPUT)
+		make $(SUPPRESS_OUTPUT); \
+		cp lib/liblz4.a $(LIBS_DIR)
 
-build_libzstd_external: download_zstd_external $(EXTERNAL_DIR)/zstd/lib/libzstd.a
-$(EXTERNAL_DIR)/zstd/lib/libzstd.a:
+build_libzstd_external: download_zstd_external $(LIBS_DIR)/libzstd.a
+$(LIBS_DIR)/libzstd.a:
 	@echo "Building libzstd ..."
 	@cd $(EXTERNAL_DIR)/zstd; \
-		make lib $(SUPPRESS_OUTPUT)
+		make lib $(SUPPRESS_OUTPUT); \
+		cp lib/libzstd.a $(LIBS_DIR)
 
-build_brotli_external: download_brotli_external $(EXTERNAL_DIR)/brotli/libbrotlicommon-static.a $(EXTERNAL_DIR)/brotli/libbrotlidec-static.a $(EXTERNAL_DIR)/brotli/libbrotlienc-static.a
-$(EXTERNAL_DIR)/brotli/libbrotlicommon-static.a:
-$(EXTERNAL_DIR)/brotli/libbrotlidec-static.a:
-$(EXTERNAL_DIR)/brotli/libbrotlienc-static.a:
+build_brotli_external: download_brotli_external $(LIBS_DIR)/libbrotlicommon-static.a $(LIBS_DIR)/libbrotlidec-static.a $(LIBS_DIR)/libbrotlienc-static.a
+$(LIBS_DIR)/libbrotlicommon-static.a:
+$(LIBS_DIR)/libbrotlidec-static.a:
+$(LIBS_DIR)/libbrotlienc-static.a:
 	@echo "Building brotli ..."
 	@cd $(EXTERNAL_DIR)/brotli; \
 		./configure-cmake --disable-debug $(SUPPRESS_OUTPUT); \
 		make $(SUPPRESS_OUTPUT); \
 		echo "Testing brotli build ..."; \
-		make test $(SUPPRESS_OUTPUT)
+		make test $(SUPPRESS_OUTPUT); \
+		cp libbrotlienc-static.a libbrotlidec-static.a libbrotlicommon-static.a $(LIBS_DIR)
 
 ########################
 #         MISC         #
 ########################
-clean:
-	@rm -rf $(SOURCE_DIR)/adb $(STAMPS_DIR) $(DEPENDS_DIR) $(INCLUDES_DIR) $(EXTERNAL_DIR)
+clean_all: clean_build clean_sources
+
+clean_build:
+	@cd $(SOURCE_DIR) && make clean
+
+clean_sources:
+	@rm -rf $(SOURCE_DIR)/adb $(STAMPS_DIR) $(DEPENDS_DIR) $(INCLUDES_DIR) $(EXTERNAL_DIR) $(OUT_DIR)
