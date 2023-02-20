@@ -7,22 +7,34 @@ The initial goal was to build the binary for the Raspberry Pi 4b (`aarch64` proc
 ## Requirements
 
 - `clang`
+- `libudev-dev`
+- `libc6-dev`
 - `cmake` (to build Protobuf & BoringSSL)
 - `golang-go` (to build BoringSSL)
-- `libunwind-dev` (optional, to test BoringSSL build)
+- `pkg-config` (optional, improves BoringSSL build tests)
+- `libunwind-dev` (optional, improves BoringSSL build tests)
 - `autoconf` (to build libusb)
 - `libtool` (to build libusb)
-- `libudev1` (to build libusb)
-- `libudev-dev` (to build libusb)
 
 For Debian / Ubuntu:
 ```bash
-sudo apt-get install clang cmake golang-go libunwind-dev autoconf libtool libudev1 libudev-dev
+sudo apt-get install clang libudev1 libudev-dev cmake golang-go pkg-config libunwind-dev autoconf libtool
 ```
+
+## Usage
+
+Clone the repositories and install dependencies, then just:
+
+```bash
+cd adb-standalone-build
+make
+```
+
+By default messages are log by each target (e.g. `Downloading adb source ...`, `Building boringssl ...`, etc...) and commands output is muted to follow the build more easily, but you can `tail -f error.log` to watch if anything goes wrong, or just comment the `SUPPRESS_OUTPUT` line in the root `Makefile` to get full commands output.
 
 ## Tested on
 
-- `x86_64 Ubuntu 22.04 5.15.0-60-generic`
+- `x86_64 Ubuntu 22.04 5.15.0-60-generic` / `clang 14` / `cmake 3.22` / `go 1.18` / `autoconf 2.71` / `libtool 2.4`
 
 ## Credits
 
