@@ -52,8 +52,8 @@ endif
 
 all: make_adb
 
-make_adb: all_download_source all_download_external all_download_headers all_patch_source all_build_external $(OUT_DIR)/adb
-$(OUT_DIR)/adb:
+make_adb: all_download_source all_download_external all_download_headers all_patch_source all_build_external $(OUT_DIR)/bin/adb
+$(OUT_DIR)/bin/adb:
 	@echo "Building adb ..."
 	@cd $(SOURCE_DIR) && make
 
