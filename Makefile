@@ -37,7 +37,7 @@ else
   $(info Platform Tools version $(PLATFORM_TOOLS_VERSION) found!)
 endif
 
-all: all_download_source all_patch_source all_download_headers all_download_external all_build all_compile
+all: all_download_source all_patch_source all_download_headers all_download_external all_build
 
 ########################
 #   DOWNLOAD SOURCE    #
@@ -300,20 +300,6 @@ $(EXTERNAL_DIR)/brotli/libbrotlienc-static.a:
 		make $(SUPPRESS_OUTPUT); \
 		echo "Testing brotli build ..."; \
 		make test $(SUPPRESS_OUTPUT)
-
-########################
-#       COMPILE        #
-########################
-all_compile: compile_proto_files
-
-PROTO_SOURCES := $(shell find $(SOURCE_DIR)/adb/proto/ $(SOURCE_DIR)/adb/fastdeploy/proto/ -name '*.proto')
-PROTO_TARGETS := $(patsubst %.proto,%.pb.cc, $(PROTO_SOURCES)) $(patsubst %.proto,%.pb.h, $(PROTO_SOURCES))
-
-compile_proto_files: download_adb_source build_protobuf_external $(PROTO_TARGETS)
-$(PROTO_TARGETS)&:
-	@echo "Compiling .proto files ..."
-	@$(EXTERNAL_DIR)/protobuf/protoc -I=$(SOURCE_DIR)/adb/proto/ --cpp_out=$(SOURCE_DIR)/adb/proto/ $(SOURCE_DIR)/adb/proto/*.proto $(SUPPRESS_OUTPUT)
-	@$(EXTERNAL_DIR)/protobuf/protoc -I=$(SOURCE_DIR)/adb/fastdeploy/proto/ --cpp_out=$(SOURCE_DIR)/adb/fastdeploy/proto/ $(SOURCE_DIR)/adb/fastdeploy/proto/*.proto $(SUPPRESS_OUTPUT)
 
 ########################
 #         MISC         #

@@ -28,10 +28,20 @@ ADB_COMMON_FLAGS := \
 	-DADB_HOST=1 \
 	-DANDROID_BASE_UNIQUE_FD_DISABLE_IMPLICIT_CONVERSION=1
 
-all: $(libdepends_a_TARGET) $(libmdnssd_a_TARGET) $(libadb_a_TARGET) $(adb_TARGET)
-adb: $(libadb_a_TARGET) $(adb_TARGET)
+all: compile_proto_files $(libdepends_a_TARGET) $(libmdnssd_a_TARGET) $(libadb_a_TARGET) $(adb_TARGET)
 
 .PHONY: all
+
+########################
+#     proto files      #
+########################
+PROTO_SOURCES := $(shell find adb/proto/ adb/fastdeploy/proto/ -name '*.proto')
+PROTO_TARGETS := $(patsubst %.proto,%.pb.cc, $(PROTO_SOURCES)) $(patsubst %.proto,%.pb.h, $(PROTO_SOURCES))
+
+compile_proto_files:
+$(PROTO_TARGETS)&:
+	@external/protobuf/protoc -I=adb/proto/ --cpp_out=adb/proto/ adb/proto/*.proto $(SUPPRESS_OUTPUT)
+	@external/protobuf/protoc -I=adb/fastdeploy/proto/ --cpp_out=adb/fastdeploy/proto/ adb/fastdeploy/proto/*.proto $(SUPPRESS_OUTPUT)
 
 ########################
 #     libdepends       #
