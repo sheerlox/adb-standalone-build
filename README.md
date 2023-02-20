@@ -1,6 +1,8 @@
-# adb-arm-build
+# adb-standalone-build
 
-This project aims to build standalone `adb` for the arm/arm64 platform from downloaded sources (so sources are trustable and it can be easily updated).
+This project aims to build a standalone `adb` binary on Linux from downloaded sources (more trustable than source code copy-pasta and better maintainability).
+
+The initial goal was to build the binary for the Raspberry Pi 4b (`aarch64` processor), but it should be architecture-independent since it builds everything from sources (developed on my `x86-64` laptop and then built without any issue on the RPi4b).
 
 ## Requirements
 
@@ -18,15 +20,13 @@ For Debian / Ubuntu:
 sudo apt-get install clang cmake golang-go libunwind-dev autoconf libtool libudev1 libudev-dev
 ```
 
-## Resources
-- https://github.com/stevenrao/adb-proj
-- https://github.com/bonnyfone/adb-arm
-- https://github.com/prife/adb
-- https://src.fedoraproject.org/rpms/android-tools/blob/rawhide/f/generate_build.rb
+## Tested on
+
+- `x86_64 Ubuntu 22.04 5.15.0-60-generic`
 
 ## Credits
 
-Initially forked from https://github.com/stevenrao/adb-proj.
+> Initially forked from [stevenrao/adb-proj](https://github.com/stevenrao/adb-proj).
 
 This application uses Open Source components. You can find the source code of their open source projects along with license information below. We acknowledge and are grateful to these developers for their contributions to open source.
 

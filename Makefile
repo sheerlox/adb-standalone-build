@@ -309,7 +309,6 @@ all_compile: compile_proto_files
 PROTO_SOURCES := $(shell find $(SOURCE_DIR)/adb/proto/ $(SOURCE_DIR)/adb/fastdeploy/proto/ -name '*.proto')
 PROTO_TARGETS := $(patsubst %.proto,%.pb.cc, $(PROTO_SOURCES)) $(patsubst %.proto,%.pb.h, $(PROTO_SOURCES))
 
-# TODO: move to src/Makefile as the targets cannot be generated on first run because the files aren't present yet
 compile_proto_files: download_adb_source build_protobuf_external $(PROTO_TARGETS)
 $(PROTO_TARGETS)&:
 	@echo "Compiling .proto files ..."
