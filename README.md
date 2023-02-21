@@ -4,9 +4,11 @@ This project aims to build a standalone `adb` binary on Linux from downloaded so
 
 The initial goal was to build the binary for the Raspberry Pi 4b (`aarch64` processor), but it should be architecture-independent since it builds everything from sources (developed on my `x86-64` laptop and then built without any issue on the RPi4b).
 
-## Requirements
+## Dependencies
 
 - `clang`
+- `libstdc++-11-dev`
+- `libgcc-11-dev`
 - `libudev-dev`
 - `libc6-dev`
 - `cmake` (to build Protobuf & BoringSSL)
@@ -18,7 +20,7 @@ The initial goal was to build the binary for the Raspberry Pi 4b (`aarch64` proc
 
 For Debian / Ubuntu:
 ```bash
-sudo apt-get install clang libudev1 libudev-dev cmake golang-go pkg-config libunwind-dev autoconf libtool
+sudo apt-get install clang libstdc++-11-dev libgcc-11-dev libudev1 libudev-dev cmake golang-go pkg-config libunwind-dev autoconf libtool
 ```
 
 ## Usage
@@ -35,7 +37,7 @@ By default, messages are logged by each target (e.g. `Downloading adb source ...
 
 ## Tested on
 
-- `x86_64 Ubuntu 22.04 5.15.0-60-generic` / `clang 14` / `cmake 3.22` / `go 1.18` / `autoconf 2.71` / `libtool 2.4`
+- `x86_64 Ubuntu 22.04 5.15.0-60-generic` / `clang 14` / `libstdc++-dev 11.3` / `libgcc-dev 11.3` / `cmake 3.22` / `go 1.18` / `autoconf 2.71` / `libtool 2.4`
 
 ## Screenshot
 
