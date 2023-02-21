@@ -6,6 +6,9 @@ PLATFORM_TOOLS_REF := platform-tools-$(PLATFORM_TOOLS_VERSION)
 # comment out the following line to get full commands output
 SUPPRESS_OUTPUT := >/dev/null 2>>error.log
 
+CXX = clang++ -std=c++20
+CC  = clang
+
 STAMPS_DIR := .stamps
 SOURCE_DIR := $(abspath src)
 DEPENDS_DIR := $(SOURCE_DIR)/depends
@@ -13,15 +16,21 @@ INCLUDES_DIR := $(SOURCE_DIR)/includes
 EXTERNAL_DIR := $(SOURCE_DIR)/external
 OUT_DIR := $(abspath out)
 LIBS_DIR := $(OUT_DIR)/.libs
+INTER_DIR := $(OUT_DIR)/.intermediates
+BIN_DIR := $(OUT_DIR)/bin
 
 NPROCS := $(shell grep -c ^processor /proc/cpuinfo)
 
-# export variables to make them available to the child Makefile
+# export variables to make them available to the child Makefile / CMakeLists.txt
+export CXX
+export CC
 export DEPENDS_DIR
 export INCLUDES_DIR
 export EXTERNAL_DIR
 export OUT_DIR
 export LIBS_DIR
+export INTER_DIR
+export BIN_DIR
 
 # create working directories if they don't exist
 ifneq ($(STAMPS_DIR), $(wildcard $(STAMPS_DIR)))
@@ -39,7 +48,13 @@ endif
 ifneq ($(LIBS_DIR), $(wildcard $(LIBS_DIR)))
   $(shell mkdir -p $(LIBS_DIR))
 endif
-$(shell rm error.log && touch error.log)
+ifneq ($(INTER_DIR), $(wildcard $(INTER_DIR)))
+  $(shell mkdir -p $(INTER_DIR))
+endif
+ifneq ($(BIN_DIR), $(wildcard $(BIN_DIR)))
+  $(shell mkdir -p $(BIN_DIR))
+endif
+$(shell rm -f error.log && touch error.log)
 
 $(info Checking if Platform Tools version $(PLATFORM_TOOLS_VERSION) exists...)
 VERSION_EXISTS := $(shell git ls-remote --exit-code --tags https://android.googlesource.com/platform/manifest refs/tags/$(PLATFORM_TOOLS_REF) >/dev/null 2>&1; echo $$?)
@@ -57,7 +72,20 @@ $(OUT_DIR)/bin/adb:
 	@echo "Building adb ..."
 	@cd $(SOURCE_DIR) && make
 
-test: make_adb
+make_tests: make_adb $(OUT_DIR)/bin/adb_test
+$(OUT_DIR)/bin/adb_test:
+	@echo "Building adb tests ..."
+	@cp cmake_files/CMakeLists.adb_test.txt $(SOURCE_DIR)/adb/CMakeLists.txt
+	@mkdir -p $(SOURCE_DIR)/adb/build/
+	@set -e; \
+		cd $(SOURCE_DIR)/adb/build/; \
+		cmake .. $(SUPPRESS_OUTPUT); \
+		make $(SUPPRESS_OUTPUT); \
+		cp ./adb_test $(OUT_DIR)/bin/
+
+test: make_adb make_tests
+	@echo "Running adb tests ..."
+	@$(OUT_DIR)/bin/adb_test
 	@export PATH=$(OUT_DIR)/bin:$${PATH}; \
 		python $(SOURCE_DIR)/adb/test_adb.py
 
@@ -141,7 +169,7 @@ $(DEPENDS_DIR)/mdnssd:
 #  DOWNLOAD EXTERNAL   #
 ########################
 all_download_external: download_zlib_external download_protobuf_external download_boringssl_external download_libusb_external	download_lz4_external \
-	download_zstd_external download_brotli_external
+	download_zstd_external download_brotli_external download_googletest_external
 
 download_zlib_external: $(EXTERNAL_DIR)/zlib
 $(EXTERNAL_DIR)/zlib:
@@ -178,8 +206,13 @@ $(EXTERNAL_DIR)/zstd:
 
 download_brotli_external: $(EXTERNAL_DIR)/brotli
 $(EXTERNAL_DIR)/brotli:
-	@echo "Downloading brotli ..."
+	@echo "Downloading brotli source ..."
 	@git clone https://android.googlesource.com/platform/external/brotli --single-branch --branch $(PLATFORM_TOOLS_REF) $(EXTERNAL_DIR)/brotli/ $(SUPPRESS_OUTPUT)
+
+download_googletest_external: $(EXTERNAL_DIR)/googletest
+$(EXTERNAL_DIR)/googletest:
+	@echo "Downloading googletest source ..."
+	@git clone https://android.googlesource.com/platform/external/googletest --single-branch --branch $(PLATFORM_TOOLS_REF) $(EXTERNAL_DIR)/googletest/ $(SUPPRESS_OUTPUT)
 
 ########################
 #     PATCH SOURCE     #
@@ -265,12 +298,14 @@ $(SOURCE_DIR)/adb/deployagentscript.inc:
 ########################
 #        BUILD         #
 ########################
-all_build_external: build_zlib_external build_protobuf_external build_libusb_external build_boringssl_external build_liblz4_external build_libzstd_external build_brotli_external
+all_build_external: build_zlib_external build_protobuf_external build_libusb_external build_boringssl_external build_liblz4_external build_libzstd_external \
+	build_brotli_external build_googletest_external
 
 build_zlib_external: download_zlib_external $(LIBS_DIR)/libz.a
 $(LIBS_DIR)/libz.a:
 	@echo "Building zlib ..."
-	@cd $(EXTERNAL_DIR)/zlib; \
+	@set -e; \
+		cd $(EXTERNAL_DIR)/zlib; \
 		./configure $(SUPPRESS_OUTPUT); \
 		make $(SUPPRESS_OUTPUT); \
 		cp libz.a $(LIBS_DIR)
@@ -279,8 +314,9 @@ build_protobuf_external: download_protobuf_external build_zlib_external $(LIBS_D
 $(LIBS_DIR)/protoc:
 $(LIBS_DIR)/libprotobuf.a:
 	@echo "Building protobuf ..."
-	@cd $(EXTERNAL_DIR)/protobuf; \
-		cmake ./cmake -DCMAKE_CXX_STANDARD=20 -DZLIB_LIBRARY=$(EXTERNAL_DIR)/zlib/libz.a -DZLIB_INCLUDE_DIR=$(EXTERNAL_DIR)/zlib/ $(SUPPRESS_OUTPUT); \
+	@set -e; \
+		cd $(EXTERNAL_DIR)/protobuf; \
+		cmake ./cmake -DZLIB_LIBRARY=$(EXTERNAL_DIR)/zlib/libz.a -DZLIB_INCLUDE_DIR=$(EXTERNAL_DIR)/zlib/ $(SUPPRESS_OUTPUT); \
 		cmake --build . -j$(NPROCS) $(SUPPRESS_OUTPUT); \
 		echo "Testing protobuf build ..."; \
 		cmake --build . --target check $(SUPPRESS_OUTPUT); \
@@ -289,37 +325,43 @@ $(LIBS_DIR)/libprotobuf.a:
 build_libusb_external: download_libusb_external $(LIBS_DIR)/libusb-1.0.a
 $(LIBS_DIR)/libusb-1.0.a:
 	@echo "Building libusb ..."
-	@cd $(EXTERNAL_DIR)/libusb; \
+	@set -e; \
+		cd $(EXTERNAL_DIR)/libusb; \
 		./autogen.sh --enable-static --disable-shared $(SUPPRESS_OUTPUT); \
 		make $(SUPPRESS_OUTPUT); \
 		cp libusb/.libs/libusb-1.0.a $(LIBS_DIR)
 
-build_boringssl_external: download_boringssl_external $(LIBS_DIR)/libcrypto.a $(LIBS_DIR)/libssl.a
+build_boringssl_external: download_boringssl_external download_googletest_external $(LIBS_DIR)/libcrypto.a $(LIBS_DIR)/libssl.a
 $(LIBS_DIR)/libcrypto.a:
 $(LIBS_DIR)/libssl.a:
 	@echo "Building boringssl ..."
-	@bash utils/git_sparse.sh https://android.googlesource.com/platform/external/googletest $(PLATFORM_TOOLS_REF) googletest/ $(EXTERNAL_DIR)/boringssl/third_party/googletest/ $(SUPPRESS_OUTPUT); \
-		sed -i 's/-Wformat=2 //' $(EXTERNAL_DIR)/boringssl/CMakeLists.txt; \
-		mkdir -p $(EXTERNAL_DIR)/boringssl/build; \
+	@ln -sf $(EXTERNAL_DIR)/googletest/googletest/ $(EXTERNAL_DIR)/boringssl/third_party/googletest $(SUPPRESS_OUTPUT)
+	@sed -i 's/-Wformat=2 //' $(EXTERNAL_DIR)/boringssl/CMakeLists.txt
+	@mkdir -p $(EXTERNAL_DIR)/boringssl/build
+	@set -e; \
 		cd $(EXTERNAL_DIR)/boringssl/build; \
-		CC=/usr/bin/clang CXX=/usr/bin/clang++ cmake .. $(SUPPRESS_OUTPUT); \
-		make $(SUPPRESS_OUTPUT); \
-		echo "Testing boringssl build ..."; \
-		go run $(EXTERNAL_DIR)/boringssl/util/all_tests.go $(SUPPRESS_OUTPUT); \
-		cd $(EXTERNAL_DIR)/boringssl/ssl/test/runner && go test $(SUPPRESS_OUTPUT); \
-		cp $(EXTERNAL_DIR)/boringssl/build/ssl/libssl.a $(EXTERNAL_DIR)/boringssl/build/crypto/libcrypto.a $(LIBS_DIR)
+		cmake .. $(SUPPRESS_OUTPUT); \
+		make $(SUPPRESS_OUTPUT)
+	@echo "Testing boringssl build ..."
+	@cd $(EXTERNAL_DIR)/boringssl; \
+		go run util/all_tests.go $(SUPPRESS_OUTPUT)
+	@cd $(EXTERNAL_DIR)/boringssl/ssl/test/runner; \
+		go test $(SUPPRESS_OUTPUT)
+	@cp $(EXTERNAL_DIR)/boringssl/build/ssl/libssl.a $(EXTERNAL_DIR)/boringssl/build/crypto/libcrypto.a $(LIBS_DIR)
 
 build_liblz4_external: download_lz4_external $(LIBS_DIR)/liblz4.a
 $(LIBS_DIR)/liblz4.a:
 	@echo "Building lz4 ..."
-	@cd $(EXTERNAL_DIR)/lz4; \
+	@set -e; \
+		cd $(EXTERNAL_DIR)/lz4; \
 		make $(SUPPRESS_OUTPUT); \
 		cp lib/liblz4.a $(LIBS_DIR)
 
 build_libzstd_external: download_zstd_external $(LIBS_DIR)/libzstd.a
 $(LIBS_DIR)/libzstd.a:
 	@echo "Building libzstd ..."
-	@cd $(EXTERNAL_DIR)/zstd; \
+	@set -e; \
+		cd $(EXTERNAL_DIR)/zstd; \
 		make lib $(SUPPRESS_OUTPUT); \
 		cp lib/libzstd.a $(LIBS_DIR)
 
@@ -328,12 +370,24 @@ $(LIBS_DIR)/libbrotlicommon-static.a:
 $(LIBS_DIR)/libbrotlidec-static.a:
 $(LIBS_DIR)/libbrotlienc-static.a:
 	@echo "Building brotli ..."
-	@cd $(EXTERNAL_DIR)/brotli; \
+	@set -e; \
+		cd $(EXTERNAL_DIR)/brotli; \
 		./configure-cmake --disable-debug $(SUPPRESS_OUTPUT); \
 		make $(SUPPRESS_OUTPUT); \
 		echo "Testing brotli build ..."; \
 		make test $(SUPPRESS_OUTPUT); \
 		cp libbrotlienc-static.a libbrotlidec-static.a libbrotlicommon-static.a $(LIBS_DIR)
+
+build_googletest_external: download_googletest_external $(LIBS_DIR)/libgtest.a $(LIBS_DIR)/libgtest_main.a
+$(LIBS_DIR)/libgtest.a:
+$(LIBS_DIR)/libgtest_main.a:
+	@echo "Building googletest ..."
+	@mkdir -p $(EXTERNAL_DIR)/googletest/build
+	@set -e; \
+		cd $(EXTERNAL_DIR)/googletest/build; \
+		cmake ..; \
+		make; \
+		cp lib/libgtest.a lib/libgtest_main.a $(LIBS_DIR)
 
 ########################
 #         MISC         #

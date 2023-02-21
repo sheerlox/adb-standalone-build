@@ -1,0 +1,73 @@
+cmake_minimum_required(VERSION 3.10)
+project(adb_test)
+
+set(CMAKE_C_COMPILER /usr/bin/clang)
+set(CMAKE_CXX_COMPILER /usr/bin/clang++)
+set(CMAKE_CXX_STANDARD 20)
+
+# stop execution if any of the root Makefile variables are not defined
+if(
+  NOT DEFINED ENV{DEPENDS_DIR}
+  OR NOT DEFINED ENV{EXTERNAL_DIR}
+  OR NOT DEFINED ENV{LIBS_DIR}
+  OR NOT DEFINED ENV{INTER_DIR}
+)
+    message(FATAL_ERROR "You must set DEPENDS_DIR, EXTERNAL_DIR, LIBS_DIR, INTER_DIR environment variables")
+endif()
+
+# GTest
+set(GTEST_INCLUDE_DIR $ENV{EXTERNAL_DIR}/googletest/googletest/include)
+set(GTEST_LIBRARY $ENV{EXTERNAL_DIR}/googletest/build/lib)
+set(GTEST_MAIN_LIBRARY $ENV{EXTERNAL_DIR}/googletest/build/lib)
+find_package(GTest REQUIRED)
+set_target_properties(GTest::gtest PROPERTIES
+    IMPORTED_LOCATION ${GTEST_LIBRARY}/libgtest.a
+)
+set_target_properties(GTest::gtest_main PROPERTIES
+    IMPORTED_LOCATION ${GTEST_LIBRARY}/libgtest_main.a
+)
+enable_testing()
+
+# adb_test
+add_executable(
+  adb_test
+
+  adb_io_test.cpp
+  # adb_listeners_test.cpp -> results in Segmentation fault
+  adb_utils_test.cpp
+  fdevent/fdevent_test.cpp
+  socket_spec_test.cpp
+  socket_test.cpp
+  sysdeps_test.cpp
+  sysdeps/stat_test.cpp
+  # transport_test.cpp -> results in Segmentation fault
+  types_test.cpp
+  client/mdns_utils_test.cpp
+)
+
+include_directories(
+  adb_test
+  
+  ${CMAKE_SOURCE_DIR}
+  $ENV{DEPENDS_DIR}/base/include
+  $ENV{DEPENDS_DIR}/cutils/include
+  $ENV{EXTERNAL_DIR}/boringssl/include
+)
+target_link_libraries(
+  adb_test
+  
+  $ENV{INTER_DIR}/libadb.a
+  $ENV{INTER_DIR}/libdepends.a
+  $ENV{INTER_DIR}/libmsdbssd.a
+  $ENV{LIBS_DIR}/libssl.a
+  $ENV{LIBS_DIR}/libcrypto.a
+  $ENV{LIBS_DIR}/libusb-1.0.a
+  $ENV{LIBS_DIR}/libprotobuf.a
+  
+  udev
+
+  GTest::gtest_main
+)
+
+include(GoogleTest)
+gtest_discover_tests(adb_test)

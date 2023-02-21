@@ -6,12 +6,12 @@ The initial goal was to build the binary for the Raspberry Pi 4b (`aarch64` proc
 
 ## Dependencies
 
+- `cmake` (>= 3.10)
 - `clang`
 - `libstdc++-11-dev`
 - `libgcc-11-dev`
 - `libudev-dev`
 - `libc6-dev`
-- `cmake` (to build Protobuf & BoringSSL)
 - `golang-go` (to build BoringSSL)
 - `pkg-config` (optional, improves BoringSSL build tests)
 - `libunwind-dev` (optional, improves BoringSSL build tests)
@@ -20,7 +20,7 @@ The initial goal was to build the binary for the Raspberry Pi 4b (`aarch64` proc
 
 For Debian / Ubuntu:
 ```bash
-sudo apt-get install clang libstdc++-11-dev libgcc-11-dev libudev1 libudev-dev cmake golang-go pkg-config libunwind-dev autoconf libtool
+sudo apt-get install cmake clang libstdc++-11-dev libgcc-11-dev libudev1 libudev-dev golang-go pkg-config libunwind-dev autoconf libtool
 ```
 
 ## Usage

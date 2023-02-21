@@ -1,15 +1,9 @@
 SHELL := /bin/bash
 
-CXX = clang++ -std=c++20
-CC  = clang
-
-# stop execution if any of the parent Makefile variables are not defined
-ifeq ($(and $(DEPENDS_DIR),$(INCLUDES_DIR),$(EXTERNAL_DIR),$(OUT_DIR),$(LIBS_DIR)),)
+# stop execution if any of the root Makefile variables are not defined
+ifeq ($(and $(CXX),$(CC),$(DEPENDS_DIR),$(INCLUDES_DIR),$(EXTERNAL_DIR),$(OUT_DIR),$(LIBS_DIR),$(INTER_DIR),$(BIN_DIR)),)
   $(error This Makefile should only be called from the root Makefile)
 endif
-
-INTER_DIR := $(OUT_DIR)/.intermediates
-BIN_DIR := $(OUT_DIR)/bin
 
 libdepends_a_TARGET := $(INTER_DIR)/libdepends.a
 libadb_a_TARGET := $(INTER_DIR)/libadb.a
@@ -25,14 +19,6 @@ EXTERNAL_INC := -Iexternal/protobuf/src -Iexternal/boringssl/include -Iexternal/
 ADB_COMMON_FLAGS := \
 	-DADB_HOST=1 \
 	-DANDROID_BASE_UNIQUE_FD_DISABLE_IMPLICIT_CONVERSION=1
-
-# create working directories if they don't exist
-ifneq ($(INTER_DIR), $(wildcard $(INTER_DIR)))
-  $(shell mkdir -p $(INTER_DIR))
-endif
-ifneq ($(BIN_DIR), $(wildcard $(BIN_DIR)))
-  $(shell mkdir -p $(BIN_DIR))
-endif
 
 all: compile_proto_files $(libdepends_a_TARGET) $(libmdnssd_a_TARGET) $(libadb_a_TARGET) $(adb_TARGET)
 
@@ -101,9 +87,9 @@ libdepends_a_OBJ_CXX := $(patsubst %.cpp,%.o, $(libdepends_a_SOURCES_CXX))
 libdepends_a_OBJ_CC := $(patsubst %.cc,%.o, $(libdepends_a_SOURCES_CC))
 
 $(libdepends_a_OBJ_CXX): %.o:%.cpp
-	$(CXX) -c $(libdepends_a_INC) $(libdepends_a_CXXFLAGS) $< -o $@
+	$(CXX) $(libdepends_a_INC) $(libdepends_a_CXXFLAGS) -c $< -o $@
 $(libdepends_a_OBJ_CC): %.o:%.cc
-	$(CXX) -c $(libdepends_a_INC) $(libdepends_a_CXXFLAGS) $< -o $@
+	$(CXX) $(libdepends_a_INC) $(libdepends_a_CXXFLAGS) -c $< -o $@
 
 $(libdepends_a_TARGET): $(libdepends_a_OBJ_CXX) $(libdepends_a_OBJ_CC)
 	ar rc $(libdepends_a_TARGET) $(libdepends_a_OBJ_CXX) $(libdepends_a_OBJ_CC)
@@ -146,9 +132,9 @@ libmdnssd_a_CFLAGS := \
 
 libmdnssd_a_OBJ_C := $(patsubst %.c,%.o, $(libmdnssd_a_SOURCES_C))
 $(libmdnssd_a_OBJ_C): %.o:%.c
-	$(CC) -c $(libmdnssd_a_INC) $(libmdnssd_a_CFLAGS) $< -o $@
+	$(CC) $(libmdnssd_a_INC) $(libmdnssd_a_CFLAGS) -c $< -o $@
 
-$(libmdnssd_a_TARGET): $(OUT_DIR) $(libmdnssd_a_OBJ_C)
+$(libmdnssd_a_TARGET): $(libmdnssd_a_OBJ_C)
 	ar rc $(libmdnssd_a_TARGET) $(libmdnssd_a_OBJ_C)
 
 ########################
@@ -216,9 +202,9 @@ libadb_a_OBJ_CXX := $(patsubst %.cpp,%.o, $(libadb_a_SOURCES_CXX))
 libadb_a_OBJ_CC := $(patsubst %.cc,%.o, $(libadb_a_SOURCES_CC))
 
 $(libadb_a_OBJ_CXX): %.o:%.cpp
-	$(CXX) -c $(libadb_a_INC) $(libadb_a_CXXFLAGS) $< -o $@
+	$(CXX) $(libadb_a_INC) $(libadb_a_CXXFLAGS) -c $< -o $@
 $(libadb_a_OBJ_CC): %.o:%.cc
-	$(CXX) -c $(libadb_a_INC) $(libadb_a_CXXFLAGS) $< -o $@
+	$(CXX) $(libadb_a_INC) $(libadb_a_CXXFLAGS) -c $< -o $@
 
 $(libadb_a_TARGET): $(libadb_a_OBJ_CXX) $(libadb_a_OBJ_CC)
 	ar rc $(libadb_a_TARGET) $(libadb_a_OBJ_CXX) $(libadb_a_OBJ_CC)
@@ -252,7 +238,7 @@ adb_LDFLAG := -ludev -lpthread -static-libgcc -static-libstdc++ -L$(LIBS_DIR) -l
 adb_OBJ_CXX := $(patsubst %.cpp,%.o, $(adb_SOURCES))
 
 $(adb_OBJ_CXX): %.o:%.cpp
-	$(CXX) -c $(adb_INC) $(adb_CXXFLAGS) $< -o $@
+	$(CXX) $(adb_INC) $(adb_CXXFLAGS) -c $< -o $@
 
 $(adb_TARGET): $(adb_OBJ_CXX)
 	$(CXX) -o $@ $^ $(adb_CXXFLAGS) $(libadb_a_TARGET) $(libmdnssd_a_TARGET) $(libdepends_a_TARGET) $(adb_LDFLAG)
