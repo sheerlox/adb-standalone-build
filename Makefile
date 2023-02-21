@@ -57,6 +57,10 @@ $(OUT_DIR)/bin/adb:
 	@echo "Building adb ..."
 	@cd $(SOURCE_DIR) && make
 
+test: make_adb
+	@export PATH=$(OUT_DIR)/bin:$${PATH}; \
+		python $(SOURCE_DIR)/adb/test_adb.py
+
 ########################
 #   DOWNLOAD SOURCE    #
 ########################

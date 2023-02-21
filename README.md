@@ -26,8 +26,9 @@ sudo apt-get install clang libudev1 libudev-dev cmake golang-go pkg-config libun
 Clone the repositories and install dependencies, then just:
 
 ```bash
-cd adb-standalone-build
+cd adb-standalone-build/
 make
+make test
 ```
 
 By default, messages are logged by each target (e.g. `Downloading adb source ...`, `Building boringssl ...`, etc...) and the commands' output is muted to follow the build more easily, but you can `tail -f error.log` to watch if anything goes wrong, or just comment the `SUPPRESS_OUTPUT` line in the root `Makefile` to get full commands output.
