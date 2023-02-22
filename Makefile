@@ -72,20 +72,21 @@ $(OUT_DIR)/bin/adb:
 	@echo "Building adb ..."
 	@cd $(SOURCE_DIR) && make
 
-make_tests: make_adb $(OUT_DIR)/bin/adb_test
-$(OUT_DIR)/bin/adb_test:
-	@echo "Building adb tests ..."
+make_tests: make_adb $(SOURCE_DIR)/adb/build/adb_test
+$(SOURCE_DIR)/adb/build/adb_test:
+	@echo "Building adb C++ tests ..."
 	@cp cmake_files/CMakeLists.adb_test.txt $(SOURCE_DIR)/adb/CMakeLists.txt
 	@mkdir -p $(SOURCE_DIR)/adb/build/
 	@set -e; \
 		cd $(SOURCE_DIR)/adb/build/; \
 		cmake .. $(SUPPRESS_OUTPUT); \
-		make $(SUPPRESS_OUTPUT); \
-		cp ./adb_test $(OUT_DIR)/bin/
+		make $(SUPPRESS_OUTPUT)
 
 test: make_adb make_tests
-	@echo "Running adb tests ..."
-	@$(OUT_DIR)/bin/adb_test
+	@echo "Running adb C++ tests ..."
+	@cd $(SOURCE_DIR)/adb/build/; \
+		ctest --output-on-failure
+	@echo "Running adb binary tests ..."
 	@export PATH=$(OUT_DIR)/bin:$${PATH}; \
 		python $(SOURCE_DIR)/adb/test_adb.py
 
@@ -392,10 +393,9 @@ $(LIBS_DIR)/libgtest_main.a:
 ########################
 #         MISC         #
 ########################
-clean_all: clean_build clean_sources
-
 clean_build:
+	@rm -rf $(SOURCE_DIR)/adb/build/
 	@cd $(SOURCE_DIR) && make clean
 
-clean_sources:
+clean_all:
 	@rm -rf $(SOURCE_DIR)/adb $(STAMPS_DIR) $(DEPENDS_DIR) $(INCLUDES_DIR) $(EXTERNAL_DIR) $(OUT_DIR)

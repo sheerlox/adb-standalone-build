@@ -4,6 +4,7 @@ project(adb_test)
 set(CMAKE_C_COMPILER /usr/bin/clang)
 set(CMAKE_CXX_COMPILER /usr/bin/clang++)
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -DADB_HOST=1 -DANDROID_BASE_UNIQUE_FD_DISABLE_IMPLICIT_CONVERSION=1")
 
 # stop execution if any of the root Makefile variables are not defined
 if(
